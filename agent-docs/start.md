@@ -71,7 +71,7 @@ Before any implementation:
    - **Relations to Code Files**: Links to relevant files.
    - **Steps**: Sequential implementation steps with file references
    - **Tasklist**: Markdown checklist (`[]` / `[x]`)
-4. Avoid assumptions. Ask for clarification if code behavior or requirements are unclear.
+4. Avoid assumptions. Ask for clarification if code behavior or requirements are unclear. you have access to context7 mcp . use it heavily to get the latest implementation details and documentations.
 5. Leverage Next.js 16 features appropriately (server actions, streaming, caching, Turbopack).
 
 ## Important Notes
