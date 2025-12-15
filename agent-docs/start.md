@@ -9,7 +9,7 @@ BIM760 is a customer/admin web application for an insurance company, built with 
 
 ## Getting Started
 
-BIM760 is a full-stack Next.js 16 application using Drizzle ORM, PostgreSQL, Zustand for state management, Tailwind CSS, and shadcn/ui components.
+BIM760 is a full-stack Next.js 16 application using Drizzle ORM, PostgreSQL, Zustand for state management, Tailwind CSS, and shadcn/ui components , lucide-react icons.
 
 To get started, follow these steps:
 
@@ -84,6 +84,7 @@ Before any implementation:
    - Use server-side rendering or server actions for sensitive operations
    - Follow basic security practices (input validation, no client-side secrets)
    - Log activities securely
+     6- the contents of the website should always be persian.
 
 ## Coding Practices
 
