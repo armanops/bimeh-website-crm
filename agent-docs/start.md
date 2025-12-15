@@ -5,17 +5,17 @@ it is not part of a task nor a file to be edited by the agent . you are to follo
 
 # Welcome to BIM760
 
-BIM760 is a customer/admin web application for an insurance company, built with Next.js 16. It focuses on SEO-optimized product detail pages (PDPs) for insurance products, user accounts, reminders, chatbots, and an admin panel for managing content, queues (e.g., SMS campaigns), WhatsApp interfaces, and AI-suggested responses.
+BIM760 is a customer/admin web application for an insurance company, built with Next.js 16 (App Router). It includes SEO-optimized product detail pages (PDPs) for insurance products, user accounts, reminders, chatbots, a marketing outreach panel with AI-powered WhatsApp messaging, and a comprehensive admin panel for managing content, leads, customers, campaigns, queues (e.g., SMS/WhatsApp), activity history, and AI-suggested responses.
 
 ## Getting Started
 
-BIM760 is a full-stack Next.js 16 with Drizzle ORM , PostgreSQL .Zustand ,Tailwind CSS, shadcn components .
+BIM760 is a full-stack Next.js 16 application using Drizzle ORM, PostgreSQL, Zustand for state management, Tailwind CSS, and shadcn/ui components.
 
 To get started, follow these steps:
 
-1. To start doing any task, you need to make a task of what you want to do. and make the proper relations to code files (without explicitly writing the code in the task file).
-   The task file should be bare minimum, just the core logics, the steps of the task and a checklist of steps to do which after the task is done gets checked.
-   Example of task header sections:
+1. To start doing any task, you must first create a task Markdown file describing what you intend to do, including proper relations to existing code files (without writing actual code in the task file).
+   The task file should be minimal and focused: core logic, key steps, and a checklist.
+   Example task header sections:
 
    - Overview
    - Core Logic
@@ -23,82 +23,90 @@ To get started, follow these steps:
    - Steps
    - Checklist
 
-2. Check the task with me and confirm.
-3. Start doing the task.
-4. Check the task list and confirm with me that the task is done.
-5. I will test it myself and confirm that it is done, do not run the server yourself as it is running on my server and I will test it myself.
-6. Do not build the project.
+2. Share the task with me and wait for confirmation before proceeding.
+3. Execute the task step by step.
+4. Update the checklist as items are completed and confirm with me when the task is fully done.
+5. I will test the implementation myself on the running server. Do not run the server, build the project, or execute npm commands yourself.
+6. Never attempt to start or build the application locally.
 
-To get started, always read `package.json` and the `README.md` file to understand the project. Try to follow the conventions of the project. Do not create test files. Ask me to test if you need to. Do not attempt to run the server yourself.
+Always begin by reviewing `package.json` and the root `README.md` to understand current dependencies, scripts, and project conventions. Follow existing patterns strictly.
 
-## How to create new files
+## How to Create New Files
 
-When you want to create a new file, the files should be bite-sized and have one or few logics. A file should have one purpose only and if you are getting big in the file should be broken into smaller files.
+- Files must be small, focused, and serve a single responsibility. If a file grows large or handles multiple unrelated concerns, split it into smaller files.
+- Main structure:
+  - Pages and layouts: `/app`
+  - Components: `/components`
+  - Database logic and schema: `/db`
+  - Content (e.g., MDX for PDPs): `/content`
+  - API routes and server actions: `/app/api` or server-only files
+  - Utilities and helpers: `/lib` or `/utils` (prefer colocated utils next to the feature folder when possible)
 
-The main app is under the root Next.js structure: pages in `/app`, components in `/components`, database in `/db`, content (e.g., MDX for PDPs) in `/content`. API routes in `/app/api` for backend logic.
+Every major folder must contain a concise `README.md` explaining its purpose, key files, and usage guidelines. When creating a new folder, add a minimal `README.md` immediately — no code references, no bloat, just high-level intent.
 
-# important note
+## Important Rules
 
-Under each chunk of code, big folders have a `README.md` file that explains the purpose of the folder and the files inside it, and how to use or create them. Also if you make a new folder there should be a `README.md` file that explains the purpose of the folder and how to use it, super minimal and easy to understand . not refrencing code or bloat .
+- Do not mock data, functions, components, or APIs. Always implement real logic using existing utilities or create proper ones.
+- Never use `any` or `unknown` types unless absolutely unavoidable — in such rare cases, add a clear comment explaining why.
+- All text in the admin/marketing panels must support Persian (RTL layout). Use proper RTL classes and direction handling.
+- Phone numbers must always be normalized to international format (e.g., 98912...) before storage or use in WhatsApp links.
 
-# important note
+## Folder and Architecture Logic
 
-Do not mock anything. Do not mock data, functions, or anything else. Do not use type 'any' or 'unknown' in the code unless absolutely necessary and provide the explanation why it is necessary.
-
-## important folder logics
-
-DB operations should be separate functions in `/db/index.ts` or specific query files (e.g., `/db/queries/products.ts`). Do not add DB operations inside components or pages; the logic should be in the DB operations files, and you will call those functions.
-
-Helper functions should be inside a `/lib` or `/utils` folder next to the parent folder. They should already exist so check first. If not, create a new one. And helper files should be named after the logic. If the logics are far separated, create a new folder for them.
-
-For content-heavy PDPs, use MDX in `/content` with Contentlayer for processing.
+- Database operations must be isolated in dedicated files under `/db` (e.g., `/db/queries/leads.ts`, `/db/actions/customers.ts`, or centralized in `/db/index.ts`). Never place raw Drizzle queries inside components, pages, or client code.
+- Helper and utility functions belong in `/lib` or feature-specific `/utils` folders. Check existing utilities first before creating new ones.
+- For content-heavy pages (PDPs), use MDX in `/content` processed via Contentlayer or similar.
+- Marketing/CRM features (leads import, message templates, AI personalization, activity logging, exports) should follow clean separation: UI in `/components/admin/outreach`, server actions in `/app/admin/outreach/actions`, queries in `/db/queries/outreach.ts`.
 
 ## Agentic Flow
 
-Before making any decisions, follow the agentic flow guidelines:
+Before any implementation:
 
-1. Always review `package.json` .
-2. Ensure every major folder has a `README.md` file explaining the purpose of the folder and its contents at a high level. If a `README.md` is missing, create one with a general overview.
-3. Before starting any task, create a task Markdown file named after the feature in the `agent-docs/tasks` folder with the following sections:
-   - **Description**: A brief overview of the task.
-   - **Steps**: Key steps taken to complete the task, including references to relevant files.
-   - **Tasklist**: A checklist using `[]` for tasks. Mark completed items with `[x]`.
-4. Avoid making assumptions about the code. If uncertain, seek clarification from me.
-5. Be mindful of Next.js 16 features like Cache Components, Turbopack, and proxy.ts for optimal performance.
+1. Review `package.json` and relevant folder `README.md` files.
+2. Ensure every major folder has an up-to-date `README.md`. Create one if missing.
+3. Create a task file in `agent-docs/tasks/` named after the feature (kebab-case).
+   Sections required:
+   - **Description**: Brief overview
+   - **Steps**: Sequential implementation steps with file references
+   - **Tasklist**: Markdown checklist (`[]` / `[x]`)
+4. Avoid assumptions. Ask for clarification if code behavior or requirements are unclear.
+5. Leverage Next.js 16 features appropriately (server actions, streaming, caching, Turbopack).
 
 ## Important Notes
 
-1. Always utilize the project's existing utilities, functions, hooks, components, Tailwind classes, and colors.
-2. Do not try to run the server, I will run the server and test the changes myself. Do not build or anything else.
-3. Always be mindful of responsiveness, for both mobile and desktop.
-4. This is a content-heavy project so make sure every best practice of a SEO-friendly website is followed (e.g., SSG for PDPs, meta tags, structured data). You may suggest improvements for SEO to be added or done by me.
-5. For insurance data, prioritize security: Use server-side rendering/actions for sensitive ops, encrypt where needed, and follow OWASP basics.
+1. Always reuse existing components, hooks, utilities, Tailwind classes, and color tokens.
+2. Do not run the server or execute build/dev commands — I will handle testing.
+3. Ensure full responsiveness (mobile and desktop).
+4. Prioritize SEO best practices, especially for public-facing pages (SSG where possible, proper meta tags, structured data).
+5. For all insurance-related data and marketing outreach:
+   - Use server-side rendering or server actions for sensitive operations
+   - Follow basic security practices (input validation, no client-side secrets)
+   - Log activities securely
 
 ## Coding Practices
 
-1. Each component should be in a separate file.
-2. Always use shadcn/ui and Tailwind classes for UI elements, lucide-react for icons.
-3. Do not use the `any` type, use the specific type as much as possible.
-4. Types should be in a separate file in the closest folder to the component.
-5. Use Drizzle for all DB interactions; define schemas in `/db/schema.ts`.
-6. Leverage Next.js 16 features: Use Cache Components for explicit caching in dynamic parts, Turbopack for dev/build speed.
-   Markdown
-7. always use kebab-case for filenames and folders.
+1. One component per file, named clearly.
+2. Use exclusively shadcn/ui components, Tailwind CSS, and lucide-react icons.
+3. Define TypeScript interfaces/types in separate files close to their usage (e.g., `/types/outreach.ts`).
+4. Use Drizzle ORM exclusively for database work. Schema in `/db/schema.ts`.
+5. File and folder names must be kebab-case.
+6. Implement proper error handling and user feedback (toasts, loading states).
 
 ## Communication Protocol
 
-- Be direct and technical in responses
-- Don't use conversational fillers like "Great", "Sure", etc.
-- Complete tasks step-by-step, waiting for confirmation between steps
-- Ask for clarification only when absolutely necessary
-- Reference specific files and lines when discussing code
+- Be direct, technical, and concise
+- No conversational fillers ("Great", "Sounds good", etc.)
+- Complete tasks sequentially and wait for confirmation at key milestones
+- Ask questions when making big decisions or unclear.
+- Reference exact file paths and context when discussing changes
 
 ## Task Completion Criteria
 
-- All checklist items in the task MD file must be checked
-- Code must compile without errors
-- Basic functionality must work as specified
-- Follow all architectural decisions from the MD files
+- All items in the task checklist marked `[x]`
+- Code integrates cleanly with existing structure
+- No TypeScript errors
+- Functionality works as described (verified by my testing)
+- All conventions, folder rules, and security considerations followed
 
-The goal is to build a robust, scalable betting application that follows all specified rules and maintains clean, maintainable code.
-Always update your task checklist as you complete each step.
+The goal is to build a robust, maintainable, and scalable insurance platform with strong marketing/CRM capabilities while keeping code clean, typed, and consistent.
+Always update your task checklist as progress is made.
