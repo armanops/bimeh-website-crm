@@ -66,7 +66,9 @@ Before any implementation:
 2. Ensure every major folder has an up-to-date `README.md`. Create one if missing.
 3. Create a task file in `agent-docs/tasks/` named after the feature (kebab-case).
    Sections required:
-   - **Description**: Brief overview
+   - **Description**: Brief overview 1 or 2 paragraphs.
+   - **core Logic**: specific details to pay attention to.
+   - **Relations to Code Files**: Links to relevant files.
    - **Steps**: Sequential implementation steps with file references
    - **Tasklist**: Markdown checklist (`[]` / `[x]`)
 4. Avoid assumptions. Ask for clarification if code behavior or requirements are unclear.
