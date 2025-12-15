@@ -24,26 +24,26 @@ export default async function CustomerProfilePage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Customer Profile</h1>
+      <h1 className="text-2xl font-bold mb-4">پروفایل مشتری</h1>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium">Email</label>
+          <label className="block text-sm font-medium">ایمیل</label>
           <p className="text-sm text-gray-600">{user.email}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium">First Name</label>
+          <label className="block text-sm font-medium">نام</label>
           <p className="text-sm text-gray-600">{user.firstName || "N/A"}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium">Last Name</label>
+          <label className="block text-sm font-medium">نام خانوادگی</label>
           <p className="text-sm text-gray-600">{user.lastName || "N/A"}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium">Display Name</label>
+          <label className="block text-sm font-medium">نام نمایشی</label>
           <p className="text-sm text-gray-600">{user.displayName || "N/A"}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium">Phone</label>
+          <label className="block text-sm font-medium">تلفن</label>
           <p className="text-sm text-gray-600">{user.phone || "N/A"}</p>
         </div>
       </div>

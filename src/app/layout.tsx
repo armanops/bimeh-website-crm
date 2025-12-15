@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BIM760 - Insurance Products",
-  description: "Explore our comprehensive insurance products",
+  title: "BIM760 - محصولات بیمه",
+  description: "محصولات بیمه جامع ما را کاوش کنید",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light">
+    <html lang="fa" dir="rtl" className="light">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

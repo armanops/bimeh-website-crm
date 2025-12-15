@@ -8,13 +8,13 @@ export default function Home() {
           BIM760
         </h1>
         <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl">
-          Comprehensive insurance solutions for your peace of mind
+          راهکارهای جامع بیمه برای آرامش خاطر شما
         </p>
         <Link
           href="/auth/signin"
           className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-lg font-medium"
         >
-          Login
+          ورود
         </Link>
       </main>
     </div>

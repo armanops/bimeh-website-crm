@@ -15,11 +15,11 @@ import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navigationItems = [
-  { name: "Upload Leads", href: "/admin/upload-leads", icon: Upload },
-  { name: "Leads Table", href: "/admin/leads-table", icon: Table },
-  { name: "Customers Table", href: "/admin/customers-table", icon: Users },
-  { name: "Activity History", href: "/admin/activity-history", icon: History },
-  { name: "Export Data", href: "/admin/export-data", icon: Download },
+  { name: "آپلود لیدها", href: "/admin/upload-leads", icon: Upload },
+  { name: "جدول لیدها", href: "/admin/leads-table", icon: Table },
+  { name: "جدول مشتریان", href: "/admin/customers-table", icon: Users },
+  { name: "تاریخچه فعالیت", href: "/admin/activity-history", icon: History },
+  { name: "صادرات داده", href: "/admin/export-data", icon: Download },
 ];
 
 export default function Sidebar() {
@@ -54,7 +54,7 @@ export default function Sidebar() {
           )}
         >
           <Settings className="h-5 w-5" />
-          <span>Settings</span>
+          <span>تنظیمات</span>
         </Link>
         {session?.user && (
           <Link
