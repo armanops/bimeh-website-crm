@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "pnpm run seed:admin && PORT=7600 next dev",
+    "prebuild": "pnpm run seed:admin",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -12,7 +13,8 @@
     "db:push": "drizzle-kit push:pg",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:drop": "drizzle-kit drop:pg"
+    "db:drop": "drizzle-kit drop:pg",
+    "seed:admin": "tsx --env-file=.env src/scripts/seed-super-admin.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.80",

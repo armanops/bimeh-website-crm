@@ -2,6 +2,9 @@ import { db } from "@/db";
 import { usersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 async function seedSuperAdmin() {
   const email = process.env.SUPER_ADMIN_EMAIL;
@@ -39,4 +42,11 @@ async function seedSuperAdmin() {
   console.log("Super admin created");
 }
 
-seedSuperAdmin().catch(console.error);
+seedSuperAdmin()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
