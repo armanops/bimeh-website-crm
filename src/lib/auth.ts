@@ -5,7 +5,7 @@ import { usersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const authOptions = {
   providers: [
     Credentials({
       name: "credentials",
@@ -34,14 +34,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return {
           id: user.id.toString(),
           email: user.email,
-          name: user.displayName || user.firstName,
-          role: user.role,
+          name: user.displayName || user.firstName || undefined,
+          role: user.role as string,
         };
       },
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -59,4 +59,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
-});
+};
+
+export default NextAuth(authOptions);
