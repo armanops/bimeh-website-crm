@@ -9,6 +9,7 @@ import {
   Download,
   Settings,
   User,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -16,6 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 const navigationItems = [
+  { name: "مدیریت محصولات", href: "/admin/products", icon: Package },
   { name: "آپلود لیدها", href: "/admin/upload-leads", icon: Upload },
   { name: "جدول لیدها", href: "/admin/leads-table", icon: Table },
   { name: "جدول مشتریان", href: "/admin/customers-table", icon: Users },

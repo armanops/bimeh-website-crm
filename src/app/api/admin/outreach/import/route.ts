@@ -143,12 +143,25 @@ export async function PUT(request: NextRequest) {
           continue;
         }
 
-        // Find product by name
+        // Find product by name or keywords
         let productId = null;
         if (mappedLead.productName) {
-          const product = products.find(
-            (p) => p.name === mappedLead.productName
-          );
+          const product = products.find((p) => {
+            // Exact match by name
+            if (p.name === mappedLead.productName) return true;
+            // Match by keywords (comma-separated)
+            if (p.keywords) {
+              const keywords = p.keywords
+                .split(",")
+                .map((k) => k.trim().toLowerCase());
+              const searchTerm = mappedLead.productName!.toLowerCase();
+              return keywords.some(
+                (keyword) =>
+                  searchTerm.includes(keyword) || keyword.includes(searchTerm)
+              );
+            }
+            return false;
+          });
           if (product) {
             productId = product.id;
           }
