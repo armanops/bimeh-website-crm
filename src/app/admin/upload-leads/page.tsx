@@ -9,11 +9,7 @@ import { Upload, FileText } from "lucide-react";
 import LeadPreviewTable from "../../../../components/admin/outreach/lead-preview-table";
 
 interface LeadData {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  insuranceType?: string;
-  [key: string]: any;
+  [key: string]: string;
 }
 
 export default function UploadLeadsPage() {

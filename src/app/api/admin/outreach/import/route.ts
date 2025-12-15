@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       headers.forEach((header, index) => {
         rowObj[header] = row[index] || "";
       });
-      return mapColumns(rowObj);
+      return rowObj;
     });
 
     return NextResponse.json({ leads, columns: headers });
@@ -111,8 +111,9 @@ export async function PUT(request: NextRequest) {
 
     for (const lead of leads) {
       try {
-        const normalizedPhone = normalizePhone(lead.phone);
-        if (!normalizedPhone || !lead.firstName || !lead.lastName) {
+        const mappedLead = mapColumns(lead);
+        const normalizedPhone = normalizePhone(mappedLead.phone);
+        if (!normalizedPhone || !mappedLead.firstName || !mappedLead.lastName) {
           errors.push({ lead, error: "Missing required fields" });
           continue;
         }
@@ -128,10 +129,10 @@ export async function PUT(request: NextRequest) {
         }
 
         validLeads.push({
-          firstName: lead.firstName,
-          lastName: lead.lastName,
+          firstName: mappedLead.firstName,
+          lastName: mappedLead.lastName,
           phone: normalizedPhone,
-          insuranceType: lead.insuranceType,
+          insuranceType: mappedLead.insuranceType,
           source: "Excel import",
           importedBy: "admin", // TODO: get from session
         });
