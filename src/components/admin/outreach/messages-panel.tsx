@@ -39,6 +39,9 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
   const [previewMessage, setPreviewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Show all templates - users can select any template regardless of recipient
+  const availableTemplates = templates;
+
   // Update message text when template changes
   useEffect(() => {
     if (selectedTemplate) {
@@ -130,7 +133,7 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
             <Select
               value={selectedTemplate?.id.toString() || ""}
               onValueChange={(value) => {
-                const template = templates.find(
+                const template = availableTemplates.find(
                   (t) => t.id.toString() === value
                 );
                 setSelectedTemplate(template || null);
@@ -140,9 +143,10 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
                 <SelectValue placeholder="انتخاب قالب..." />
               </SelectTrigger>
               <SelectContent>
-                {templates.map((template) => (
+                {availableTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id.toString()}>
-                    {template.name} ({template.channel})
+                    {template.name} ({template.channel}){" "}
+                    {template.productId ? "(محصول خاص)" : "(عمومی)"}
                   </SelectItem>
                 ))}
               </SelectContent>

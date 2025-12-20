@@ -182,13 +182,16 @@ export const customerNotesTable = pgTable("customer_notes", {
   ...timestamps,
 });
 
-// Message templates for reuse in outreach (global editable template support)
+// Message templates for reuse in outreach (product-specific with global fallback)
 export const messageTemplatesTable = pgTable("message_templates", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   templateText: text("template_text").notNull(), // Supports placeholders like {نام}
   channel: messageChannelEnum("channel").default("whatsapp").notNull(),
-  isDefault: boolean("is_default").default(false), // One default per channel recommended
+  productId: integer("product_id").references(() => productsTable.id, {
+    onDelete: "cascade",
+  }), // Null for global templates
+  isDefault: boolean("is_default").default(false), // One default per product/channel or global
   createdBy: varchar("created_by", { length: 255 }),
   ...timestamps,
 });

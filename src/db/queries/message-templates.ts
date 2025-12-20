@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { messageTemplatesTable } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull, or } from "drizzle-orm";
 import type { MessageTemplate, NewMessageTemplate } from "@/db/schema";
 
 // Get all message templates
@@ -8,6 +8,38 @@ export async function getMessageTemplates() {
   return await db
     .select()
     .from(messageTemplatesTable)
+    .orderBy(desc(messageTemplatesTable.createdAt));
+}
+
+// Get message templates for a specific product or global templates
+export async function getMessageTemplatesForProduct(productId?: number) {
+  const conditions = [];
+  if (productId) {
+    conditions.push(eq(messageTemplatesTable.productId, productId));
+  } else {
+    conditions.push(isNull(messageTemplatesTable.productId));
+  }
+
+  return await db
+    .select()
+    .from(messageTemplatesTable)
+    .where(...conditions)
+    .orderBy(desc(messageTemplatesTable.createdAt));
+}
+
+// Get all templates available for a product (product-specific + global)
+export async function getAvailableTemplatesForProduct(productId?: number) {
+  return await db
+    .select()
+    .from(messageTemplatesTable)
+    .where(
+      productId
+        ? or(
+            eq(messageTemplatesTable.productId, productId),
+            isNull(messageTemplatesTable.productId)
+          )
+        : isNull(messageTemplatesTable.productId)
+    )
     .orderBy(desc(messageTemplatesTable.createdAt));
 }
 
@@ -22,16 +54,34 @@ export async function getMessageTemplateById(id: number) {
   return template || null;
 }
 
-// Get default template for a channel
-export async function getDefaultTemplateForChannel(channel: string) {
-  const [template] = await db
+// Get default template for a channel and optional product
+export async function getDefaultTemplateForChannel(
+  channel: string,
+  productId?: number
+) {
+  // First try product-specific default
+  if (productId) {
+    const [productTemplate] = await db
+      .select()
+      .from(messageTemplatesTable)
+      .where(eq(messageTemplatesTable.channel, channel as any))
+      .where(eq(messageTemplatesTable.productId, productId))
+      .where(eq(messageTemplatesTable.isDefault, true))
+      .limit(1);
+
+    if (productTemplate) return productTemplate;
+  }
+
+  // Fallback to global default
+  const [globalTemplate] = await db
     .select()
     .from(messageTemplatesTable)
     .where(eq(messageTemplatesTable.channel, channel as any))
+    .where(isNull(messageTemplatesTable.productId))
     .where(eq(messageTemplatesTable.isDefault, true))
     .limit(1);
 
-  return template || null;
+  return globalTemplate || null;
 }
 
 // Create new message template

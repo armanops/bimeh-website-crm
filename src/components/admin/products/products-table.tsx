@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, MessageSquare } from "lucide-react";
 
 interface Product {
   id: number;
@@ -26,12 +26,14 @@ interface ProductsTableProps {
   products: Product[];
   onEdit: (product: Product) => void;
   onDelete: (productId: number) => void;
+  onManageTemplates: (product: Product) => void;
 }
 
 export default function ProductsTable({
   products,
   onEdit,
   onDelete,
+  onManageTemplates,
 }: ProductsTableProps) {
   return (
     <div className="border rounded-md overflow-x-auto">
@@ -79,6 +81,15 @@ export default function ProductsTable({
                       className="h-8 w-8 p-0"
                     >
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => onManageTemplates(product)}
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0"
+                      title="مدیریت قالب‌های پیام"
+                    >
+                      <MessageSquare className="h-4 w-4" />
                     </Button>
                     <Button
                       onClick={() => onDelete(product.id)}

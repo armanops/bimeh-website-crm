@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, Package } from "lucide-react";
 import ProductsTable from "@/components/admin/products/products-table";
 import ProductModal from "@/components/admin/products/product-modal";
+import TemplatesModal from "@/components/admin/products/templates-modal";
 
 interface Product {
   id: number;
@@ -22,7 +23,10 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProductForTemplates, setSelectedProductForTemplates] =
+    useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -80,6 +84,16 @@ export default function ProductsPage() {
     handleModalClose();
   };
 
+  const handleManageTemplates = (product: Product) => {
+    setSelectedProductForTemplates(product);
+    setTemplatesModalOpen(true);
+  };
+
+  const handleTemplatesModalClose = () => {
+    setTemplatesModalOpen(false);
+    setSelectedProductForTemplates(null);
+  };
+
   if (loading) {
     return (
       <div className="p-6" dir="rtl">
@@ -118,6 +132,7 @@ export default function ProductsPage() {
             products={products}
             onEdit={handleEditProduct}
             onDelete={handleDeleteProduct}
+            onManageTemplates={handleManageTemplates}
           />
         </CardContent>
       </Card>
@@ -127,6 +142,12 @@ export default function ProductsPage() {
         onClose={handleModalClose}
         product={editingProduct}
         onSaved={handleProductSaved}
+      />
+
+      <TemplatesModal
+        open={templatesModalOpen}
+        onClose={handleTemplatesModalClose}
+        product={selectedProductForTemplates}
       />
     </div>
   );
