@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +48,7 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
   const { addToGroup } = useMessagingStore();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -305,7 +307,15 @@ export default function CustomersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                router.push(
+                                  `/admin/outreach/customers/${customer.id}`
+                                )
+                              }
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="outline">
