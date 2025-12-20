@@ -14,14 +14,24 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Search,
   Eye,
   Edit,
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Phone,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { convertLeadToCustomerAction, markLeadAsContacted } from "../actions";
 
 interface Lead {
   id: number;
@@ -33,6 +43,7 @@ interface Lead {
     name: string;
   };
   source?: string;
+  status: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +107,52 @@ export default function LeadsPage() {
     }
   };
 
+  const handleStatusChange = async (id: number, status: string) => {
+    try {
+      const response = await fetch(`/api/admin/outreach/leads/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error("Failed to update lead status");
+      toast.success("وضعیت لید بروزرسانی شد");
+      fetchLeads(search, page);
+    } catch (error) {
+      toast.error("خطا در بروزرسانی وضعیت لید");
+      console.error(error);
+    }
+  };
+
+  const handleConvertToCustomer = async (id: number) => {
+    try {
+      const result = await convertLeadToCustomerAction(id);
+      if (result.success) {
+        toast.success("لید به مشتری تبدیل شد");
+        fetchLeads(search, page);
+      } else {
+        toast.error(result.error || "خطا در تبدیل");
+      }
+    } catch (error) {
+      toast.error("خطا در تبدیل لید به مشتری");
+      console.error(error);
+    }
+  };
+
+  const handleMarkContacted = async (id: number) => {
+    try {
+      const result = await markLeadAsContacted(id);
+      if (result.success) {
+        toast.success("لید به عنوان تماس گرفته شده علامت‌گذاری شد");
+        fetchLeads(search, page);
+      } else {
+        toast.error(result.error || "خطا در علامت‌گذاری");
+      }
+    } catch (error) {
+      toast.error("خطا در علامت‌گذاری تماس");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6" dir="rtl">
       <div>
@@ -145,6 +202,7 @@ export default function LeadsPage() {
                       <TableHead className="text-right">نام</TableHead>
                       <TableHead className="text-right">نام خانوادگی</TableHead>
                       <TableHead className="text-right">شماره تلفن</TableHead>
+                      <TableHead className="text-right">وضعیت</TableHead>
                       <TableHead className="text-right">محصول</TableHead>
                       <TableHead className="text-right">منبع</TableHead>
                       <TableHead className="text-right">تاریخ ایجاد</TableHead>
@@ -165,6 +223,27 @@ export default function LeadsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           {lead.phone}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Select
+                            value={lead.status}
+                            onValueChange={(value) =>
+                              handleStatusChange(lead.id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="lead">لید</SelectItem>
+                              <SelectItem value="contacted">
+                                تماس گرفته شده
+                              </SelectItem>
+                              <SelectItem value="deactivated">
+                                غیرفعال
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-right">
                           {lead.product ? (
@@ -195,6 +274,20 @@ export default function LeadsPage() {
                             </Button>
                             <Button size="sm" variant="outline">
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleConvertToCustomer(lead.id)}
+                            >
+                              <UserPlus className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMarkContacted(lead.id)}
+                            >
+                              <Phone className="h-4 w-4" />
                             </Button>
                             <Button
                               size="sm"

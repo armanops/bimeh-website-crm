@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Search,
   Eye,
   Edit,
@@ -30,6 +37,7 @@ interface Customer {
   phone: string;
   insuranceType?: string;
   preferredChannel: string;
+  status: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,6 +97,22 @@ export default function CustomersPage() {
       fetchCustomers(search, page);
     } catch (error) {
       toast.error("خطا در حذف مشتری");
+      console.error(error);
+    }
+  };
+
+  const handleStatusChange = async (id: number, status: string) => {
+    try {
+      const response = await fetch(`/api/admin/outreach/customers/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error("Failed to update customer status");
+      toast.success("وضعیت مشتری بروزرسانی شد");
+      fetchCustomers(search, page);
+    } catch (error) {
+      toast.error("خطا در بروزرسانی وضعیت مشتری");
       console.error(error);
     }
   };
@@ -153,6 +177,7 @@ export default function CustomersPage() {
                       <TableHead className="text-right">نام</TableHead>
                       <TableHead className="text-right">نام خانوادگی</TableHead>
                       <TableHead className="text-right">شماره تلفن</TableHead>
+                      <TableHead className="text-right">وضعیت</TableHead>
                       <TableHead className="text-right">نوع بیمه</TableHead>
                       <TableHead className="text-right">کانال ترجیحی</TableHead>
                       <TableHead className="text-right">تاریخ ایجاد</TableHead>
@@ -168,6 +193,29 @@ export default function CustomersPage() {
                         <TableCell>{customer.firstName}</TableCell>
                         <TableCell>{customer.lastName}</TableCell>
                         <TableCell>{customer.phone}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={customer.status}
+                            onValueChange={(value) =>
+                              handleStatusChange(customer.id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new">جدید</SelectItem>
+                              <SelectItem value="contacted">
+                                تماس گرفته شده
+                              </SelectItem>
+                              <SelectItem value="target">هدف</SelectItem>
+                              <SelectItem value="active">فعال</SelectItem>
+                              <SelectItem value="deactivated">
+                                غیرفعال
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                         <TableCell>
                           {customer.insuranceType ? (
                             <Badge variant="secondary">

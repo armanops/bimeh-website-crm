@@ -55,6 +55,7 @@ export async function getLeads({
       productId: leadsTable.productId,
       source: leadsTable.source,
       importedBy: leadsTable.importedBy,
+      status: leadsTable.status,
       createdAt: leadsTable.createdAt,
       updatedAt: leadsTable.updatedAt,
       product: {
@@ -95,6 +96,7 @@ export async function getLeadById(id: number) {
       productId: leadsTable.productId,
       source: leadsTable.source,
       importedBy: leadsTable.importedBy,
+      status: leadsTable.status,
       createdAt: leadsTable.createdAt,
       updatedAt: leadsTable.updatedAt,
       product: {

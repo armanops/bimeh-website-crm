@@ -27,9 +27,9 @@ Implement UI controls for managing lead and customer statuses. Add status dropdo
 
 ### Tasklist
 
-- [ ] Add status dropdown to leads table
-- [ ] Add convert to customer button to leads
-- [ ] Add contacted button to leads with activity logging
-- [ ] Add status dropdown to customers table
-- [ ] Create server actions for updates
-- [ ] Test status transitions
+- [x] Add status dropdown to leads table
+- [x] Add convert to customer button to leads
+- [x] Add contacted button to leads with activity logging
+- [x] Add status dropdown to customers table
+- [x] Create server actions for updates
+- [x] Test status transitions

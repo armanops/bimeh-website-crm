@@ -60,12 +60,18 @@ export const outreachTypeEnum = pgEnum("outreach_type", [
   "custom",
 ]);
 
-export const leadStatusEnum = pgEnum("lead_status", ["lead", "contacted"]);
+export const leadStatusEnum = pgEnum("lead_status", [
+  "lead",
+  "contacted",
+  "deactivated",
+]);
 
 export const customerStatusEnum = pgEnum("customer_status", [
+  "new",
   "contacted",
   "target",
   "active",
+  "deactivated",
 ]);
 
 // Tables

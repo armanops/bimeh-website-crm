@@ -58,6 +58,7 @@ export async function getCustomers({
       phone: customersTable.phone,
       insuranceType: customersTable.insuranceType,
       preferredChannel: customersTable.preferredChannel,
+      status: customersTable.status,
       createdAt: customersTable.createdAt,
       updatedAt: customersTable.updatedAt,
       lead: {
@@ -99,6 +100,7 @@ export async function getCustomerById(id: number) {
       phone: customersTable.phone,
       insuranceType: customersTable.insuranceType,
       preferredChannel: customersTable.preferredChannel,
+      status: customersTable.status,
       createdAt: customersTable.createdAt,
       updatedAt: customersTable.updatedAt,
       lead: {
@@ -167,6 +169,7 @@ export async function convertLeadToCustomer(
     phone: lead[0].phone,
     insuranceType: additionalData.insuranceType,
     preferredChannel: additionalData.preferredChannel || "whatsapp",
+    status: additionalData.status || "new",
   };
 
   return await createCustomer(customerData);

@@ -36,6 +36,20 @@
       "when": 1766267821104,
       "tag": "0004_classy_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1766268333471,
+      "tag": "0005_redundant_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1766268353542,
+      "tag": "0006_spotty_sandman",
+      "breakpoints": true
     }
   ]
 }
