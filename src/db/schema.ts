@@ -11,7 +11,6 @@ import {
   boolean,
   integer,
   decimal,
-  pgEnum,
   index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -22,57 +21,32 @@ const timestamps = {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 };
 
-// Enums
-export const userRoleEnum = pgEnum("user_role", [
-  "customer",
-  "admin",
-  "super-admin",
-]);
-
-export const queueStatusEnum = pgEnum("queue_status", [
-  "pending",
-  "processing",
-  "sent",
-  "failed",
-]);
-
-export const activityStatusEnum = pgEnum("activity_status", [
-  "pending",
-  "sent",
-  "failed",
-]);
-
-export const messageChannelEnum = pgEnum("message_channel", [
-  "whatsapp",
-  "eita",
-  "telegram",
-  "bale",
-  "instgram",
-  "sms",
-  "email",
-]);
-
-export const outreachTypeEnum = pgEnum("outreach_type", [
-  "initial-contact",
-  "follow-up",
-  "reminder",
-  "promotion",
-  "custom",
-]);
-
-export const leadStatusEnum = pgEnum("lead_status", [
-  "lead",
-  "contacted",
-  "deactivated",
-]);
-
-export const customerStatusEnum = pgEnum("customer_status", [
-  "new",
-  "contacted",
-  "target",
-  "active",
-  "deactivated",
-]);
+// TypeScript union types for enums (replacing database enums)
+export type UserRole = "customer" | "admin" | "super-admin";
+export type QueueStatus = "pending" | "processing" | "sent" | "failed";
+export type ActivityStatus = "pending" | "sent" | "failed";
+export type MessageChannel =
+  | "whatsapp"
+  | "eita"
+  | "telegram"
+  | "bale"
+  | "instagram"
+  | "sms"
+  | "email";
+export type OutreachType =
+  | "initial-contact"
+  | "follow-up"
+  | "reminder"
+  | "promotion"
+  | "custom";
+export type LeadStatus = "lead" | "contacted" | "deactivated";
+export type CustomerStatus =
+  | "new"
+  | "contacted"
+  | "target"
+  | "active"
+  | "deactivated";
+export type UserType = "lead" | "customer";
 
 // Tables
 
@@ -93,7 +67,7 @@ export const usersTable = pgTable("users", {
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
   displayName: varchar("display_name", { length: 255 }),
-  role: userRoleEnum("role").default("customer"),
+  role: varchar("role", { length: 50 }).$type<UserRole>().default("customer"),
   isActive: boolean("is_active").default(true),
   ...timestamps,
 });
@@ -103,7 +77,9 @@ export const smsQueuesTable = pgTable("sms_queues", {
   userId: integer("user_id").references(() => usersTable.id),
   phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
   message: text("message").notNull(),
-  status: queueStatusEnum("status").default("pending"),
+  status: varchar("status", { length: 20 })
+    .$type<QueueStatus>()
+    .default("pending"),
   attempts: integer("attempts").default(0),
   maxAttempts: integer("max_attempts").default(3),
   sentAt: timestamp("sent_at"),
@@ -130,7 +106,7 @@ export const leadsTable = pgTable("leads", {
   productId: integer("product_id").references(() => productsTable.id),
   source: varchar("source", { length: 255 }), // e.g., Excel filename or campaign
   importedBy: varchar("imported_by", { length: 255 }),
-  status: leadStatusEnum("status").default("lead"),
+  status: varchar("status", { length: 20 }).$type<LeadStatus>().default("lead"),
   ...timestamps,
 });
 
@@ -144,8 +120,12 @@ export const customersTable = pgTable("customers", {
   lastName: varchar("last_name", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 20 }).unique().notNull(),
   insuranceType: text("insurance_type"),
-  preferredChannel: messageChannelEnum("preferred_channel").default("whatsapp"),
-  status: customerStatusEnum("status").default("contacted"),
+  preferredChannel: varchar("preferred_channel", { length: 20 })
+    .$type<MessageChannel>()
+    .default("whatsapp"),
+  status: varchar("status", { length: 20 })
+    .$type<CustomerStatus>()
+    .default("contacted"),
   nationalId: varchar("national_id", { length: 10 }),
   birthCertificateNumber: varchar("birth_certificate_number", { length: 255 }),
   birthCertificateIssuancePlace: varchar("birth_certificate_issuance_place", {
@@ -187,7 +167,10 @@ export const messageTemplatesTable = pgTable("message_templates", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   templateText: text("template_text").notNull(), // Supports placeholders like {نام}
-  channel: messageChannelEnum("channel").default("whatsapp").notNull(),
+  channel: varchar("channel", { length: 20 })
+    .$type<MessageChannel>()
+    .default("whatsapp")
+    .notNull(),
   productId: integer("product_id").references(() => productsTable.id, {
     onDelete: "cascade",
   }), // Null for global templates
@@ -195,6 +178,37 @@ export const messageTemplatesTable = pgTable("message_templates", {
   createdBy: varchar("created_by", { length: 255 }),
   ...timestamps,
 });
+
+// Messaging groups: Named collections of leads/customers for batch messaging
+export const groupsTable = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  createdBy: varchar("created_by", { length: 255 }),
+  ...timestamps,
+});
+
+// Group members: Many-to-many relationship between groups and users (leads/customers)
+export const groupMembersTable = pgTable(
+  "group_members",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("group_id")
+      .references(() => groupsTable.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: integer("user_id").notNull(), // Can be lead or customer ID
+    userType: varchar("user_type", { length: 10 }).$type<UserType>().notNull(),
+    addedBy: varchar("added_by", { length: 255 }),
+    ...timestamps,
+  },
+  (table) => ({
+    uniqueGroupUser: index("unique_group_user").on(
+      table.groupId,
+      table.userId,
+      table.userType
+    ),
+  })
+);
 
 // Activity log: Tracks all outreach messages (WhatsApp, SMS, etc.)
 export const activitiesTable = pgTable("activities", {
@@ -207,12 +221,20 @@ export const activitiesTable = pgTable("activities", {
   }), // Fallback if sent before customer creation
   messageText: text("message_text").notNull(),
   isAiGenerated: boolean("is_ai_generated").default(false),
-  channel: messageChannelEnum("channel").default("whatsapp").notNull(),
-  outreachType: outreachTypeEnum("outreach_type").default("initial-contact"),
+  channel: varchar("channel", { length: 20 })
+    .$type<MessageChannel>()
+    .default("whatsapp")
+    .notNull(),
+  outreachType: varchar("outreach_type", { length: 20 })
+    .$type<OutreachType>()
+    .default("initial-contact"),
   templateUsed: text("template_used"), // Snapshot of template name or content
   sentAt: timestamp("sent_at"),
   sentBy: varchar("sent_by", { length: 255 }), // Admin who triggered send
-  status: activityStatusEnum("status").default("pending").notNull(),
+  status: varchar("status", { length: 20 })
+    .$type<ActivityStatus>()
+    .default("pending")
+    .notNull(),
   failureReason: text("failure_reason"),
   notes: text("notes"),
   ...timestamps,
@@ -242,6 +264,12 @@ export type NewCustomerNote = typeof customerNotesTable.$inferInsert;
 
 export type MessageTemplate = typeof messageTemplatesTable.$inferSelect;
 export type NewMessageTemplate = typeof messageTemplatesTable.$inferInsert;
+
+export type Group = typeof groupsTable.$inferSelect;
+export type NewGroup = typeof groupsTable.$inferInsert;
+
+export type GroupMember = typeof groupMembersTable.$inferSelect;
+export type NewGroupMember = typeof groupMembersTable.$inferInsert;
 
 export type Activity = typeof activitiesTable.$inferSelect;
 export type NewActivity = typeof activitiesTable.$inferInsert;

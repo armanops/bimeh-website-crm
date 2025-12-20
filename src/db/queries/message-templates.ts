@@ -1,7 +1,11 @@
 import { db } from "@/db";
 import { messageTemplatesTable } from "@/db/schema";
 import { eq, desc, isNull, or, and } from "drizzle-orm";
-import type { MessageTemplate, NewMessageTemplate } from "@/db/schema";
+import type {
+  MessageTemplate,
+  NewMessageTemplate,
+  MessageChannel,
+} from "@/db/schema";
 
 // Get all message templates
 export async function getMessageTemplates() {
@@ -13,17 +17,14 @@ export async function getMessageTemplates() {
 
 // Get message templates for a specific product or global templates
 export async function getMessageTemplatesForProduct(productId?: number) {
-  const conditions = [];
-  if (productId) {
-    conditions.push(eq(messageTemplatesTable.productId, productId));
-  } else {
-    conditions.push(isNull(messageTemplatesTable.productId));
-  }
+  const condition = productId
+    ? eq(messageTemplatesTable.productId, productId)
+    : isNull(messageTemplatesTable.productId);
 
   return await db
     .select()
     .from(messageTemplatesTable)
-    .where(...conditions)
+    .where(condition)
     .orderBy(desc(messageTemplatesTable.createdAt));
 }
 
@@ -64,9 +65,13 @@ export async function getDefaultTemplateForChannel(
     const [productTemplate] = await db
       .select()
       .from(messageTemplatesTable)
-      .where(eq(messageTemplatesTable.channel, channel as any))
-      .where(eq(messageTemplatesTable.productId, productId))
-      .where(eq(messageTemplatesTable.isDefault, true))
+      .where(
+        and(
+          eq(messageTemplatesTable.channel, channel as MessageChannel),
+          eq(messageTemplatesTable.productId, productId),
+          eq(messageTemplatesTable.isDefault, true)
+        )
+      )
       .limit(1);
 
     if (productTemplate) return productTemplate;
@@ -76,9 +81,13 @@ export async function getDefaultTemplateForChannel(
   const [globalTemplate] = await db
     .select()
     .from(messageTemplatesTable)
-    .where(eq(messageTemplatesTable.channel, channel as any))
-    .where(isNull(messageTemplatesTable.productId))
-    .where(eq(messageTemplatesTable.isDefault, true))
+    .where(
+      and(
+        eq(messageTemplatesTable.channel, channel as MessageChannel),
+        isNull(messageTemplatesTable.productId),
+        eq(messageTemplatesTable.isDefault, true)
+      )
+    )
     .limit(1);
 
   return globalTemplate || null;

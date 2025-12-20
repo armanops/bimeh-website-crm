@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -29,9 +30,11 @@ import {
   ChevronRight,
   Phone,
   UserPlus,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { convertLeadToCustomerAction, markLeadAsContacted } from "../actions";
+import { useMessagingStore } from "@/lib/stores/messaging-store";
 
 interface Lead {
   id: number;
@@ -49,12 +52,14 @@ interface Lead {
 }
 
 export default function LeadsPage() {
+  const { addToGroup } = useMessagingStore();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
   const limit = 10;
 
   const fetchLeads = async (searchTerm = "", pageNum = 1) => {
@@ -153,6 +158,31 @@ export default function LeadsPage() {
     }
   };
 
+  const handleSelectLead = (leadId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedLeads((prev) => [...prev, leadId]);
+    } else {
+      setSelectedLeads((prev) => prev.filter((id) => id !== leadId));
+    }
+  };
+
+  const handleAddToGroup = () => {
+    const selectedLeadObjects = leads.filter((lead) =>
+      selectedLeads.includes(lead.id)
+    );
+    selectedLeadObjects.forEach((lead) => {
+      addToGroup({
+        id: lead.id,
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        phone: lead.phone,
+        type: "lead",
+      });
+    });
+    setSelectedLeads([]);
+    toast.success(`${selectedLeadObjects.length} لید به گروه اضافه شد`);
+  };
+
   return (
     <div className="p-6 space-y-6" dir="rtl">
       <div>
@@ -186,7 +216,15 @@ export default function LeadsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>لیدها ({total} مورد)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>لیدها ({total} مورد)</CardTitle>
+            {selectedLeads.length > 0 && (
+              <Button onClick={handleAddToGroup} variant="secondary">
+                <Users className="h-4 w-4 mr-2" />
+                افزودن {selectedLeads.length} مورد به گروه
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -199,6 +237,21 @@ export default function LeadsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="text-right w-12">
+                        <Checkbox
+                          checked={
+                            selectedLeads.length === leads.length &&
+                            leads.length > 0
+                          }
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedLeads(leads.map((lead) => lead.id));
+                            } else {
+                              setSelectedLeads([]);
+                            }
+                          }}
+                        />
+                      </TableHead>
                       <TableHead className="text-right">نام</TableHead>
                       <TableHead className="text-right">نام خانوادگی</TableHead>
                       <TableHead className="text-right">شماره تلفن</TableHead>
@@ -215,6 +268,14 @@ export default function LeadsPage() {
                   <TableBody>
                     {leads.map((lead) => (
                       <TableRow key={lead.id}>
+                        <TableCell className="text-right">
+                          <Checkbox
+                            checked={selectedLeads.includes(lead.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectLead(lead.id, checked as boolean)
+                            }
+                          />
+                        </TableCell>
                         <TableCell className="text-right">
                           {lead.firstName}
                         </TableCell>

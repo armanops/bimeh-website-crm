@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -27,8 +28,10 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useMessagingStore } from "@/lib/stores/messaging-store";
 
 interface Customer {
   id: number;
@@ -43,12 +46,14 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const { addToGroup } = useMessagingStore();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const limit = 10;
 
   const fetchCustomers = async (searchTerm = "", pageNum = 1) => {
@@ -130,6 +135,31 @@ export default function CustomersPage() {
     return labels[channel] || channel;
   };
 
+  const handleSelectCustomer = (customerId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedCustomers((prev) => [...prev, customerId]);
+    } else {
+      setSelectedCustomers((prev) => prev.filter((id) => id !== customerId));
+    }
+  };
+
+  const handleAddToGroup = () => {
+    const selectedCustomerObjects = customers.filter((customer) =>
+      selectedCustomers.includes(customer.id)
+    );
+    selectedCustomerObjects.forEach((customer) => {
+      addToGroup({
+        id: customer.id,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        phone: customer.phone,
+        type: "customer",
+      });
+    });
+    setSelectedCustomers([]);
+    toast.success(`${selectedCustomerObjects.length} مشتری به گروه اضافه شد`);
+  };
+
   return (
     <div className="p-6 space-y-6" dir="rtl">
       <div>
@@ -161,7 +191,15 @@ export default function CustomersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>مشتریان ({total} مورد)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>مشتریان ({total} مورد)</CardTitle>
+            {selectedCustomers.length > 0 && (
+              <Button onClick={handleAddToGroup} variant="secondary">
+                <Users className="h-4 w-4 mr-2" />
+                افزودن {selectedCustomers.length} مورد به گروه
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -174,6 +212,23 @@ export default function CustomersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="text-right w-12">
+                        <Checkbox
+                          checked={
+                            selectedCustomers.length === customers.length &&
+                            customers.length > 0
+                          }
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedCustomers(
+                                customers.map((customer) => customer.id)
+                              );
+                            } else {
+                              setSelectedCustomers([]);
+                            }
+                          }}
+                        />
+                      </TableHead>
                       <TableHead className="text-right">نام</TableHead>
                       <TableHead className="text-right">نام خانوادگی</TableHead>
                       <TableHead className="text-right">شماره تلفن</TableHead>
@@ -190,6 +245,17 @@ export default function CustomersPage() {
                   <TableBody>
                     {customers.map((customer) => (
                       <TableRow key={customer.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedCustomers.includes(customer.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectCustomer(
+                                customer.id,
+                                checked as boolean
+                              )
+                            }
+                          />
+                        </TableCell>
                         <TableCell>{customer.firstName}</TableCell>
                         <TableCell>{customer.lastName}</TableCell>
                         <TableCell>{customer.phone}</TableCell>

@@ -1,7 +1,12 @@
 import { db } from "@/db";
 import { activitiesTable, customersTable, leadsTable } from "@/db/schema";
 import { eq, like, or, desc, asc, sql, gte, lte, and } from "drizzle-orm";
-import type { Activity, NewActivity } from "@/db/schema";
+import type {
+  Activity,
+  NewActivity,
+  MessageChannel,
+  ActivityStatus,
+} from "@/db/schema";
 
 // Get all activities with optional filters and pagination
 export async function getActivities({
@@ -56,11 +61,11 @@ export async function getActivities({
   }
 
   if (channel) {
-    conditions.push(eq(activitiesTable.channel, channel as any));
+    conditions.push(eq(activitiesTable.channel, channel as MessageChannel));
   }
 
   if (status) {
-    conditions.push(eq(activitiesTable.status, status as any));
+    conditions.push(eq(activitiesTable.status, status as ActivityStatus));
   }
 
   if (dateFrom) {

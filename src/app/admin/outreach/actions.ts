@@ -7,7 +7,52 @@ import { createActivity } from "@/db/queries/activities";
 import { db } from "@/db";
 import { activitiesTable } from "@/db/schema";
 import { replaceTemplateVariables } from "@/lib/template-utils";
-import type { Customer, Lead } from "@/db/schema";
+import type {
+  Customer,
+  Lead,
+  CustomerStatus,
+  LeadStatus,
+  MessageChannel,
+} from "@/db/schema";
+
+type CustomerRecipient = {
+  id: number;
+  leadId: number | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  insuranceType: string | null;
+  preferredChannel: MessageChannel | null;
+  status: CustomerStatus | null;
+  createdAt: Date;
+  updatedAt: Date;
+  lead: {
+    id: number;
+    productId: number | null;
+    source: string | null;
+  } | null;
+  type: "customer";
+};
+
+type LeadRecipient = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  productId: number | null;
+  source: string | null;
+  importedBy: string | null;
+  status: LeadStatus | null;
+  createdAt: Date;
+  updatedAt: Date;
+  product: {
+    id: number;
+    name: string;
+  } | null;
+  type: "lead";
+};
+
+type Recipient = CustomerRecipient | LeadRecipient;
 
 export async function convertLeadToCustomerAction(leadId: number) {
   try {
@@ -70,7 +115,7 @@ export async function updateCustomerStatus(customerId: number, status: string) {
 }
 
 export async function sendWhatsAppMessage(
-  recipient: Customer | Lead,
+  recipient: Recipient,
   messageText: string,
   templateUsed?: string,
   adminId?: string
@@ -82,7 +127,7 @@ export async function sendWhatsAppMessage(
     let customerId: number;
     let leadId: number | null = null;
 
-    if ("leadId" in recipient) {
+    if (recipient.type === "lead") {
       // It's a lead - convert to customer first
       const customer = await convertLeadToCustomer(recipient.id, {
         status: "contacted",
@@ -98,7 +143,10 @@ export async function sendWhatsAppMessage(
     }
 
     // Process template variables in message
-    const processedMessage = replaceTemplateVariables(messageText, recipient);
+    const processedMessage = replaceTemplateVariables(
+      messageText,
+      recipient as Partial<Customer | Lead>
+    );
 
     // Generate WhatsApp link
     const whatsappUrl = `https://web.whatsapp.com/send/?phone=${normalizedPhone}&text=${encodeURIComponent(
@@ -117,7 +165,7 @@ export async function sendWhatsAppMessage(
 }
 
 export async function logActivity(
-  recipient: Customer | Lead,
+  recipient: Recipient,
   messageText: string,
   channel: string = "whatsapp",
   templateUsed?: string,
@@ -127,7 +175,7 @@ export async function logActivity(
     let customerId: number;
     let leadId: number | null = null;
 
-    if ("leadId" in recipient) {
+    if (recipient.type === "lead") {
       // It's a lead - convert to customer first
       const customer = await convertLeadToCustomer(recipient.id, {
         status: "contacted",
@@ -147,7 +195,7 @@ export async function logActivity(
       customerId,
       leadId,
       messageText,
-      channel: channel as any,
+      channel: channel as MessageChannel,
       outreachType: "initial-contact",
       templateUsed,
       sentAt: new Date(),
@@ -164,13 +212,107 @@ export async function logActivity(
 
 export async function getMessagePreview(
   templateText: string,
-  recipient: Customer | Lead
+  recipient: Recipient
 ) {
   try {
-    const processedMessage = replaceTemplateVariables(templateText, recipient);
+    const processedMessage = replaceTemplateVariables(
+      templateText,
+      recipient as Partial<Customer | Lead>
+    );
     return { success: true, message: processedMessage };
   } catch (error) {
     console.error("Error generating message preview:", error);
     return { success: false, error: "Failed to generate preview" };
+  }
+}
+
+// Group management actions
+export async function createGroupAction(
+  name: string,
+  description?: string,
+  adminId?: string
+) {
+  try {
+    const { createGroup } = await import("@/db/queries/groups");
+    const group = await createGroup({
+      name,
+      description,
+      createdBy: adminId,
+    });
+    revalidatePath("/admin/outreach/groups");
+    return { success: true, group };
+  } catch (error) {
+    console.error("Error creating group:", error);
+    return { success: false, error: "Failed to create group" };
+  }
+}
+
+export async function updateGroupAction(
+  id: number,
+  name: string,
+  description?: string
+) {
+  try {
+    const { updateGroup } = await import("@/db/queries/groups");
+    const group = await updateGroup(id, { name, description });
+    if (!group) {
+      return { success: false, error: "Group not found" };
+    }
+    revalidatePath("/admin/outreach/groups");
+    return { success: true, group };
+  } catch (error) {
+    console.error("Error updating group:", error);
+    return { success: false, error: "Failed to update group" };
+  }
+}
+
+export async function deleteGroupAction(id: number) {
+  try {
+    const { deleteGroup } = await import("@/db/queries/groups");
+    const success = await deleteGroup(id);
+    if (!success) {
+      return { success: false, error: "Group not found" };
+    }
+    revalidatePath("/admin/outreach/groups");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting group:", error);
+    return { success: false, error: "Failed to delete group" };
+  }
+}
+
+export async function addUsersToGroupAction(
+  groupId: number,
+  userIds: number[],
+  userType: "lead" | "customer",
+  adminId?: string
+) {
+  try {
+    const { addUsersToGroup } = await import("@/db/queries/groups");
+    const members = await addUsersToGroup(groupId, userIds, userType, adminId);
+    revalidatePath("/admin/outreach/groups");
+    return { success: true, members };
+  } catch (error) {
+    console.error("Error adding users to group:", error);
+    return { success: false, error: "Failed to add users to group" };
+  }
+}
+
+export async function removeUserFromGroupAction(
+  groupId: number,
+  userId: number,
+  userType: "lead" | "customer"
+) {
+  try {
+    const { removeUserFromGroup } = await import("@/db/queries/groups");
+    const success = await removeUserFromGroup(groupId, userId, userType);
+    if (!success) {
+      return { success: false, error: "User not found in group" };
+    }
+    revalidatePath("/admin/outreach/groups");
+    return { success: true };
+  } catch (error) {
+    console.error("Error removing user from group:", error);
+    return { success: false, error: "Failed to remove user from group" };
   }
 }
