@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm run seed:admin && PORT=7600 next dev",
-    "prebuild": "pnpm run seed:admin",
+    "prebuild": "pnpm run db:check && pnpm run db:migrate && pnpm run seed:admin || echo 'Database not available, skipping db operations'",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -14,7 +14,13 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:drop": "drizzle-kit drop",
-    "seed:admin": "tsx --env-file=.env src/scripts/seed-super-admin.ts"
+    "db:check": "tsx src/scripts/check-db.ts",
+    "seed:admin": "tsx --env-file=.env src/scripts/seed-super-admin.ts",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f app",
+    "docker:prod": "docker-compose -f docker-compose.yml up --build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.80",

@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bimeh-db
+    environment:
+      POSTGRES_DB: bimeh-website
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: uWNZugjBqixf8dxC
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bimeh-website"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bimeh-network
+
+  app:
+    build: .
+    container_name: bimeh-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URI=postgres://postgres:uWNZugjBqixf8dxC@db:5432/bimeh-website
+      - NEXTAUTH_SECRET=your-secret-key-here
+      - NEXTAUTH_URL=http://localhost:3000
+      - SUPER_ADMIN_EMAIL=superadmin@example.com
+      - SUPER_ADMIN_PASSWORD=securepassword123
+      - SUPER_ADMIN_FIRST_NAME=Super
+      - SUPER_ADMIN_LAST_NAME=Admin
+      - NODE_ENV=production
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "pnpm run db:migrate && pnpm run seed:admin && pnpm run start"
+    networks:
+      - bimeh-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  bimeh-network:
+    driver: bridge
