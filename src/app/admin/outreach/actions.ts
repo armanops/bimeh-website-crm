@@ -15,7 +15,7 @@ import type {
   MessageChannel,
 } from "@/db/schema";
 
-type CustomerRecipient = {
+export type CustomerRecipient = {
   id: number;
   leadId: number | null;
   firstName: string;
@@ -34,7 +34,7 @@ type CustomerRecipient = {
   type: "customer";
 };
 
-type LeadRecipient = {
+export type LeadRecipient = {
   id: number;
   firstName: string;
   lastName: string;
@@ -314,5 +314,45 @@ export async function removeUserFromGroupAction(
   } catch (error) {
     console.error("Error removing user from group:", error);
     return { success: false, error: "Failed to remove user from group" };
+  }
+}
+
+export async function changeUserGroupAction(
+  currentGroupId: number,
+  newGroupId: number,
+  userId: number,
+  userType: "lead" | "customer",
+  adminId?: string
+) {
+  try {
+    // First remove from current group
+    const { removeUserFromGroup, addUsersToGroup } = await import(
+      "@/db/queries/groups"
+    );
+    const removeSuccess = await removeUserFromGroup(
+      currentGroupId,
+      userId,
+      userType
+    );
+    if (!removeSuccess) {
+      return { success: false, error: "User not found in current group" };
+    }
+
+    // Then add to new group
+    const addResult = await addUsersToGroup(
+      newGroupId,
+      [userId],
+      userType,
+      adminId
+    );
+    if (!addResult) {
+      return { success: false, error: "Failed to add user to new group" };
+    }
+
+    revalidatePath("/admin/outreach/groups");
+    return { success: true };
+  } catch (error) {
+    console.error("Error changing user group:", error);
+    return { success: false, error: "Failed to change user group" };
   }
 }

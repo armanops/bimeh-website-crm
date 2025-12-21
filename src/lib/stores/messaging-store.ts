@@ -22,7 +22,7 @@ interface MessagingStore {
   selectedGroupId: number | null;
   loadGroups: (groups: Group[]) => void;
   selectGroup: (groupId: number | null) => void;
-  getSelectedGroupMembers: () => MessagingRecipient[];
+  getSelectedGroupMembers: () => Promise<MessagingRecipient[]>;
 }
 
 export const useMessagingStore = create<MessagingStore>((set, get) => ({
@@ -76,9 +76,13 @@ export const useMessagingStore = create<MessagingStore>((set, get) => ({
       const members = data.members || [];
 
       // Convert group members to MessagingRecipient format
-      // This would need to be enhanced to actually fetch the user data
-      // For now, return empty array as this needs more implementation
-      return [];
+      return members.map((member: any) => ({
+        id: member.userId,
+        firstName: member.user?.firstName || "",
+        lastName: member.user?.lastName || "",
+        phone: member.user?.phone || "",
+        type: member.userType,
+      }));
     } catch (error) {
       console.error("Error loading group members:", error);
       return [];

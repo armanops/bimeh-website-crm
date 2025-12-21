@@ -22,9 +22,18 @@ import {
 } from "@/components/ui/table";
 import { Send, MessageSquare, Eye, ExternalLink, X, Users } from "lucide-react";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
   sendWhatsAppMessage,
   logActivity,
   getMessagePreview,
+  changeUserGroupAction,
 } from "@/app/admin/outreach/actions";
 import { replaceTemplateVariables } from "@/lib/template-utils";
 import { toast } from "sonner";
@@ -40,15 +49,12 @@ import type {
   LeadStatus,
   MessageChannel,
 } from "@/db/schema";
+import type {
+  CustomerRecipient,
+  LeadRecipient,
+} from "@/app/admin/outreach/actions";
 
-type Recipient = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  type: "customer" | "lead";
-  [key: string]: unknown;
-};
+type Recipient = CustomerRecipient | LeadRecipient;
 
 interface MessagesPanelProps {
   templates: MessageTemplate[];
@@ -64,7 +70,12 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
     loadGroups,
     selectGroup,
     getSelectedGroupMembers,
+    clearGroup,
+    addToGroup,
   } = useMessagingStore();
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState<
+    MessagingRecipient[]
+  >([]);
   const [selectedTemplate, setSelectedTemplate] =
     useState<MessageTemplate | null>(null);
   const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(
@@ -73,6 +84,9 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
   const [messageText, setMessageText] = useState("");
   const [previewMessage, setPreviewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [changeGroupDialogOpen, setChangeGroupDialogOpen] = useState(false);
+  const [userToChangeGroup, setUserToChangeGroup] =
+    useState<MessagingRecipient | null>(null);
 
   // Show all templates - users can select any template regardless of recipient
   const availableTemplates = templates;
@@ -92,6 +106,44 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
     };
     loadGroupsData();
   }, [loadGroups]);
+
+  // Load group members when selectedGroupId changes
+  useEffect(() => {
+    const loadGroupMembers = async () => {
+      if (selectedGroupId) {
+        try {
+          const members = await getSelectedGroupMembers();
+          // Clear temporary group and set persistent group members
+          clearGroup();
+          members.forEach((member) => addToGroup(member));
+        } catch (error) {
+          console.error("Error loading group members:", error);
+        }
+      } else {
+        // Clear group when no group selected
+        clearGroup();
+      }
+    };
+    loadGroupMembers();
+  }, [selectedGroupId, getSelectedGroupMembers, clearGroup, addToGroup]);
+
+  // Load selected group members when group changes
+  useEffect(() => {
+    const loadSelectedGroupMembers = async () => {
+      if (selectedGroupId) {
+        try {
+          const members = await getSelectedGroupMembers();
+          setSelectedGroupMembers(members);
+        } catch (error) {
+          console.error("Error loading group members:", error);
+          setSelectedGroupMembers([]);
+        }
+      } else {
+        setSelectedGroupMembers([]);
+      }
+    };
+    loadSelectedGroupMembers();
+  }, [selectedGroupId, getSelectedGroupMembers]);
 
   const handleSelectFromGroup = (groupRecipient: MessagingRecipient) => {
     // Find the full recipient data from the recipients prop
@@ -183,68 +235,6 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
 
   return (
     <div className="space-y-6">
-      {/* Selected Group Table */}
-      {selectedGroup.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              گروه انتخاب شده ({selectedGroup.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>نام و نام خانوادگی</TableHead>
-                  <TableHead>شماره تلفن</TableHead>
-                  <TableHead>نوع</TableHead>
-                  <TableHead>عملیات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedGroup.map((recipient) => (
-                  <TableRow
-                    key={recipient.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSelectFromGroup(recipient)}
-                  >
-                    <TableCell>
-                      {recipient.firstName} {recipient.lastName}
-                    </TableCell>
-                    <TableCell>{recipient.phone}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          recipient.type === "customer"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {recipient.type === "customer" ? "مشتری" : "لید"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFromGroup(recipient.id);
-                        }}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Message Composer */}
         <Card>
@@ -284,6 +274,18 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Message Text */}
+            <div>
+              <label className="block text-sm font-medium mb-2">متن پیام</label>
+              <Textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="متن پیام را وارد کنید..."
+                rows={6}
+                className="font-mono text-sm"
+              />
             </div>
 
             {/* Group Selection */}
@@ -353,18 +355,6 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Message Text */}
-            <div>
-              <label className="block text-sm font-medium mb-2">متن پیام</label>
-              <Textarea
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                placeholder="متن پیام را وارد کنید..."
-                rows={6}
-                className="font-mono text-sm"
-              />
             </div>
 
             {/* Action Buttons */}
@@ -458,6 +448,134 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
           </CardContent>
         </Card>
       </div>
+      {/* Selected Group Table */}
+      {selectedGroupMembers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              گروه انتخاب شده ({selectedGroupMembers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>نام و نام خانوادگی</TableHead>
+                  <TableHead>شماره تلفن</TableHead>
+                  <TableHead>نوع</TableHead>
+                  <TableHead>عملیات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedGroupMembers.map((recipient) => (
+                  <TableRow
+                    key={recipient.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSelectFromGroup(recipient)}
+                  >
+                    <TableCell>
+                      {recipient.firstName} {recipient.lastName}
+                    </TableCell>
+                    <TableCell>{recipient.phone}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          recipient.type === "customer"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {recipient.type === "customer" ? "مشتری" : "لید"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromGroup(recipient.id);
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                          title="حذف از گروه"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUserToChangeGroup(recipient);
+                            setChangeGroupDialogOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="تغییر گروه"
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Change Group Dialog */}
+      <Dialog
+        open={changeGroupDialogOpen}
+        onOpenChange={setChangeGroupDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>
+              تغییر گروه برای {userToChangeGroup?.firstName}{" "}
+              {userToChangeGroup?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                انتخاب گروه جدید
+              </label>
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  // TODO: Implement group change logic
+                  toast.info("تغییر گروه - در حال پیاده‌سازی");
+                  setChangeGroupDialogOpen(false);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="انتخاب گروه..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((group) => (
+                    <SelectItem key={group.id} value={group.id.toString()}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setChangeGroupDialogOpen(false)}
+            >
+              انصراف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

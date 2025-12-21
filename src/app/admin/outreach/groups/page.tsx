@@ -36,6 +36,8 @@ import {
   createGroupAction,
   updateGroupAction,
   deleteGroupAction,
+  addUsersToGroupAction,
+  removeUserFromGroupAction,
 } from "../actions";
 
 interface Group {
@@ -430,12 +432,25 @@ export default function GroupsPage() {
       {/* Members Dialog */}
       <Dialog open={membersDialogOpen} onOpenChange={setMembersDialogOpen}>
         <DialogContent
-          className="max-w-4xl max-h-[80vh] overflow-y-auto"
+          className="min-w-7xl max-h-[80vh] overflow-y-auto"
           dir="rtl"
         >
           <DialogHeader>
             <DialogTitle>اعضای گروه: {selectedGroupName}</DialogTitle>
           </DialogHeader>
+
+          <div className="flex gap-2 mb-4">
+            <Button
+              onClick={() => {
+                // TODO: Implement add people functionality
+                toast.info("قابلیت اضافه کردن افراد به گروه در حال توسعه است");
+              }}
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              اضافه کردن افراد
+            </Button>
+          </div>
 
           {selectedGroupMembers.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
@@ -454,6 +469,7 @@ export default function GroupsPage() {
                     <TableHead className="text-right">
                       تاریخ اضافه شدن
                     </TableHead>
+                    <TableHead className="text-right">عملیات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -486,6 +502,47 @@ export default function GroupsPage() {
                         {new Date(member.createdAt).toLocaleString("fa-IR", {
                           timeZone: "Asia/Tehran",
                         })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            if (
+                              !confirm(
+                                "آیا مطمئن هستید که می‌خواهید این عضو را از گروه حذف کنید؟"
+                              )
+                            )
+                              return;
+
+                            try {
+                              const result = await removeUserFromGroupAction(
+                                member.groupId,
+                                member.userId,
+                                member.userType
+                              );
+                              if (result.success) {
+                                toast.success("عضو با موفقیت از گروه حذف شد");
+                                // Refresh the members list
+                                const response = await fetch(
+                                  `/api/admin/outreach/groups/${member.groupId}`
+                                );
+                                if (response.ok) {
+                                  const data = await response.json();
+                                  setSelectedGroupMembers(data.members || []);
+                                }
+                              } else {
+                                toast.error(result.error || "خطا در حذف عضو");
+                              }
+                            } catch (error) {
+                              toast.error("خطا در حذف عضو");
+                              console.error(error);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
