@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -87,9 +88,20 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
   const [changeGroupDialogOpen, setChangeGroupDialogOpen] = useState(false);
   const [userToChangeGroup, setUserToChangeGroup] =
     useState<MessagingRecipient | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Show all templates - users can select any template regardless of recipient
   const availableTemplates = templates;
+
+  // Filter recipients based on search term
+  const filteredRecipients = recipients.filter((recipient) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      recipient.firstName.toLowerCase().includes(term) ||
+      recipient.lastName.toLowerCase().includes(term) ||
+      recipient.phone.includes(term)
+    );
+  });
 
   // Load groups on component mount
   useEffect(() => {
@@ -316,6 +328,13 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
             {/* Recipient Selection */}
             <div>
               <label className="block text-sm font-medium mb-2">گیرنده</label>
+              <Input
+                type="text"
+                placeholder="جستجو بر اساس نام، نام خانوادگی یا شماره تلفن..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="mb-2"
+              />
               <Select
                 value={selectedRecipient?.id.toString() || ""}
                 onValueChange={(value) => {
@@ -329,7 +348,7 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
                   <SelectValue placeholder="انتخاب گیرنده..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {recipients.map((recipient) => (
+                  {filteredRecipients.map((recipient) => (
                     <SelectItem
                       key={`${recipient.type}-${recipient.id}`}
                       value={recipient.id.toString()}
