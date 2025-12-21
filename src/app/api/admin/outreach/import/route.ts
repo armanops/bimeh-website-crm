@@ -3,10 +3,8 @@ import { read, utils } from "xlsx";
 import { db } from "@/db";
 import { leadsTable, productsTable, customersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import {
-  normalizePhoneNumber,
-  validatePhoneNumber,
-} from "../../../lib/phone-validation";
+import { normalizePhoneNumber } from "@/lib/phone-utils";
+import { validatePhoneNumber } from "@/lib/phone-validation";
 
 function mapColumns(row: any): {
   firstName: string;

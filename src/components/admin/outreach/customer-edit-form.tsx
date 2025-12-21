@@ -25,39 +25,18 @@ import {
 } from "@/components/ui/form";
 import { Save, X } from "lucide-react";
 import { toast } from "sonner";
-interface Customer {
-  id: number;
-  leadId?: number | null;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  insuranceType?: string | null;
-  preferredChannel: string;
-  status: string;
-  nationalId?: string | null;
-  birthCertificateNumber?: string | null;
-  birthCertificateIssuancePlace?: string | null;
-  placeOfBirth?: string | null;
-  dateOfBirth?: string | null;
-  telegramId?: string | null;
-  whatsappId?: string | null;
-  eitaId?: string | null;
-  baleId?: string | null;
-  email?: string | null;
-  gender?: string | null;
-  maritalStatus?: string | null;
-  numberOfChildren?: number | null;
-  militaryServiceStatus?: string | null;
-  occupation?: string | null;
-  landlinePhone?: string | null;
-  emergencyPhone?: string | null;
-  emergencyPhoneRelation?: string | null;
-  residentialAddress?: string | null;
-  workAddress?: string | null;
-  residentialPostalCode?: string | null;
+import { Customer as CustomerType } from "@/db/schema";
+
+type Customer = Omit<
+  CustomerType,
+  "createdAt" | "updatedAt" | "dateOfBirth" | "preferredChannel" | "status"
+> & {
   createdAt: string;
   updatedAt: string;
-}
+  dateOfBirth: string | null;
+  preferredChannel: string;
+  status: string;
+};
 
 const customerSchema = z.object({
   firstName: z.string().min(1, "نام الزامی است"),
@@ -119,8 +98,20 @@ export default function CustomerEditForm({
       lastName: customer.lastName,
       phone: customer.phone,
       insuranceType: customer.insuranceType || undefined,
-      preferredChannel: customer.preferredChannel,
-      status: customer.status,
+      preferredChannel: (customer.preferredChannel || "whatsapp") as
+        | "whatsapp"
+        | "sms"
+        | "email"
+        | "telegram"
+        | "bale"
+        | "eita"
+        | "instagram",
+      status: (customer.status || "new") as
+        | "new"
+        | "contacted"
+        | "target"
+        | "active"
+        | "deactivated",
       nationalId: customer.nationalId || undefined,
       birthCertificateNumber: customer.birthCertificateNumber || undefined,
       birthCertificateIssuancePlace:

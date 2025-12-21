@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm run seed:admin && PORT=7600 next dev",
+    "dev": "PORT=7600 next dev",
     "prebuild": "pnpm run db:check && pnpm run db:migrate && pnpm run seed:admin || echo 'Database not available, skipping db operations'",
     "build": "next build",
-    "start": "next start",
+    "start": "PORT=7600 next start",
     "lint": "eslint",
     "db:create": "tsx src/scripts/create-db.ts",
     "db:generate": "drizzle-kit generate",

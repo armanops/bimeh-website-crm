@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     ],
   },
   turbopack: {},
+  experimental: {
+    serverComponentsExternalPackages: ["@auth/core"],
+  },
 };
 
 export default withContentlayer(nextConfig);

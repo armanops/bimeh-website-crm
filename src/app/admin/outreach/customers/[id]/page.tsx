@@ -10,40 +10,18 @@ import { toast } from "sonner";
 import CustomerEditForm from "@/components/admin/outreach/customer-edit-form";
 import CustomerNotesPanel from "@/components/admin/outreach/customer-notes-panel";
 import ActivityHistoryPanel from "@/components/admin/outreach/activity-history-panel";
+import { Customer as CustomerType } from "@/db/schema";
 
-interface Customer {
-  id: number;
-  leadId?: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  insuranceType?: string;
-  preferredChannel: string;
-  status: string;
-  nationalId?: string;
-  birthCertificateNumber?: string;
-  birthCertificateIssuancePlace?: string;
-  placeOfBirth?: string;
-  dateOfBirth?: string;
-  telegramId?: string;
-  whatsappId?: string;
-  eitaId?: string;
-  baleId?: string;
-  email?: string;
-  gender?: string;
-  maritalStatus?: string;
-  numberOfChildren?: number;
-  militaryServiceStatus?: string;
-  occupation?: string;
-  landlinePhone?: string;
-  emergencyPhone?: string;
-  emergencyPhoneRelation?: string;
-  residentialAddress?: string;
-  workAddress?: string;
-  residentialPostalCode?: string;
+type Customer = Omit<
+  CustomerType,
+  "createdAt" | "updatedAt" | "dateOfBirth" | "preferredChannel" | "status"
+> & {
   createdAt: string;
   updatedAt: string;
-}
+  dateOfBirth: string | null;
+  preferredChannel: string;
+  status: string;
+};
 
 export default function CustomerDetailPage() {
   const params = useParams();
