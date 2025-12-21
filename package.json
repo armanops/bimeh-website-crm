@@ -15,7 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "db:drop": "drizzle-kit drop",
     "db:check": "tsx src/scripts/check-db.ts",
-    "seed:admin": "tsx --env-file=.env src/scripts/seed-super-admin.ts",
+    "seed:admin": "tsx src/scripts/seed-super-admin.ts",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
