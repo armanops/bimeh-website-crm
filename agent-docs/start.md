@@ -84,8 +84,10 @@ Before any implementation:
    - Use server-side rendering or server actions for sensitive operations
    - Follow basic security practices (input validation, no client-side secrets)
    - Log activities securely
-     6- the contents of the website should always be persian.
-     7- use `sonner` for toasts. for every operation .
+
+6- the contents of the website should always be persian.
+7- use `sonner` for toasts. for every operation .
+8- the app is indie `/src` directory .
 
 ## Coding Practices
 
