@@ -31,11 +31,14 @@ import {
   Phone,
   UserPlus,
   Users,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { convertLeadToCustomerAction, markLeadAsContacted } from "../actions";
 import { useMessagingStore } from "@/lib/stores/messaging-store";
 import GroupSelectionDialog from "@/components/admin/outreach/group-selection-dialog";
+import LeadAddForm from "@/components/admin/outreach/lead-add-form";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface Lead {
   id: number;
@@ -62,6 +65,8 @@ export default function LeadsPage() {
   const [total, setTotal] = useState(0);
   const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
   const limit = 10;
 
   const fetchLeads = async (searchTerm = "", pageNum = 1) => {
@@ -89,7 +94,19 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads();
+    fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("/api/admin/products");
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data = await response.json();
+      setProducts(data.products);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
 
   const handleSearch = () => {
     fetchLeads(search, 1);
@@ -213,12 +230,32 @@ export default function LeadsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>لیدها ({total} مورد)</CardTitle>
-            {selectedLeads.length > 0 && (
-              <Button onClick={handleAddToGroup} variant="secondary">
-                <Users className="h-4 w-4 mr-2" />
-                افزودن {selectedLeads.length} مورد به گروه
-              </Button>
-            )}
+            <div className="flex gap-2">
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default">
+                    <Plus className="h-4 w-4 mr-2" />
+                    افزودن لید جدید
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <LeadAddForm
+                    onSuccess={() => {
+                      setIsAddDialogOpen(false);
+                      fetchLeads(search, page);
+                    }}
+                    onCancel={() => setIsAddDialogOpen(false)}
+                    products={products}
+                  />
+                </DialogContent>
+              </Dialog>
+              {selectedLeads.length > 0 && (
+                <Button onClick={handleAddToGroup} variant="secondary">
+                  <Users className="h-4 w-4 mr-2" />
+                  افزودن {selectedLeads.length} مورد به گروه
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>

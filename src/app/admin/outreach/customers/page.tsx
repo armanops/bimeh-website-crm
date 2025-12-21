@@ -30,10 +30,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMessagingStore } from "@/lib/stores/messaging-store";
 import GroupSelectionDialog from "@/components/admin/outreach/group-selection-dialog";
+import CustomerAddForm from "@/components/admin/outreach/customer-add-form";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface Customer {
   id: number;
@@ -58,6 +61,7 @@ export default function CustomersPage() {
   const [total, setTotal] = useState(0);
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const limit = 10;
 
   const fetchCustomers = async (searchTerm = "", pageNum = 1) => {
@@ -157,6 +161,11 @@ export default function CustomersPage() {
     fetchCustomers(search, page); // Refresh to update any changes
   };
 
+  const handleAddDialogSuccess = () => {
+    setIsAddDialogOpen(false);
+    fetchCustomers(search, page); // Refresh to update any changes
+  };
+
   return (
     <div className="p-6 space-y-6" dir="rtl">
       <div>
@@ -190,12 +199,21 @@ export default function CustomersPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>مشتریان ({total} مورد)</CardTitle>
-            {selectedCustomers.length > 0 && (
-              <Button onClick={handleAddToGroup} variant="secondary">
-                <Users className="h-4 w-4 mr-2" />
-                افزودن {selectedCustomers.length} مورد به گروه
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                variant="default"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                افزودن مشتری جدید
               </Button>
-            )}
+              {selectedCustomers.length > 0 && (
+                <Button onClick={handleAddToGroup} variant="secondary">
+                  <Users className="h-4 w-4 mr-2" />
+                  افزودن {selectedCustomers.length} مورد به گروه
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -374,6 +392,17 @@ export default function CustomersPage() {
         userType="customer"
         onSuccess={handleGroupDialogSuccess}
       />
+
+      {isAddDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <CustomerAddForm
+              onSuccess={handleAddDialogSuccess}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

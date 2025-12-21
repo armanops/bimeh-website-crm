@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeads, createLead } from "@/db/queries/leads";
+import { db } from "@/db";
+import { leadsTable, customersTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,6 +34,27 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Check if phone number already exists in leads or customers
+    const existingLead = await db
+      .select()
+      .from(leadsTable)
+      .where(eq(leadsTable.phone, body.phone))
+      .limit(1);
+
+    const existingCustomer = await db
+      .select()
+      .from(customersTable)
+      .where(eq(customersTable.phone, body.phone))
+      .limit(1);
+
+    if (existingLead.length > 0 || existingCustomer.length > 0) {
+      return NextResponse.json(
+        { error: "شماره تلفن تکراری است" },
+        { status: 400 }
+      );
+    }
+
     const lead = await createLead(body);
     return NextResponse.json(lead, { status: 201 });
   } catch (error) {
