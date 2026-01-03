@@ -44,6 +44,7 @@ interface Lead {
   id: number;
   firstName: string;
   lastName: string;
+  fullName?: string;
   phone: string;
   product?: {
     id: number;
@@ -284,6 +285,7 @@ export default function LeadsPage() {
                           }}
                         />
                       </TableHead>
+                      <TableHead className="text-right">نام کامل</TableHead>
                       <TableHead className="text-right">نام</TableHead>
                       <TableHead className="text-right">نام خانوادگی</TableHead>
                       <TableHead className="text-right">شماره تلفن</TableHead>
@@ -307,6 +309,10 @@ export default function LeadsPage() {
                               handleSelectLead(lead.id, checked as boolean)
                             }
                           />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {lead.fullName ||
+                            `${lead.firstName} ${lead.lastName}`}
                         </TableCell>
                         <TableCell className="text-right">
                           {lead.firstName}

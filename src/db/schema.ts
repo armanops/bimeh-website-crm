@@ -100,8 +100,9 @@ export const reminderTable = pgTable("reminders", {
 // Leads: Imported raw contacts (before any outreach)
 export const leadsTable = pgTable("leads", {
   id: serial("id").primaryKey(),
-  firstName: varchar("first_name", { length: 255 }).notNull(),
-  lastName: varchar("last_name", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 255 }), // Can be null if fullName is provided
+  lastName: varchar("last_name", { length: 255 }), // Can be null if fullName is provided
+  fullName: varchar("full_name", { length: 510 }), // Combined first and last name
   phone: varchar("phone", { length: 20 }).unique().notNull(), // Normalized international format
   productId: integer("product_id").references(() => productsTable.id),
   source: varchar("source", { length: 255 }), // e.g., Excel filename or campaign
@@ -116,8 +117,9 @@ export const customersTable = pgTable("customers", {
   leadId: integer("lead_id").references(() => leadsTable.id, {
     onDelete: "set null",
   }),
-  firstName: varchar("first_name", { length: 255 }).notNull(),
-  lastName: varchar("last_name", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 255 }), // Can be null if fullName is provided
+  lastName: varchar("last_name", { length: 255 }), // Can be null if fullName is provided
+  fullName: varchar("full_name", { length: 510 }), // Combined first and last name
   phone: varchar("phone", { length: 20 }).unique().notNull(),
   insuranceType: text("insurance_type"),
   preferredChannel: varchar("preferred_channel", { length: 20 })

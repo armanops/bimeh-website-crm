@@ -42,6 +42,7 @@ interface Customer {
   id: number;
   firstName: string;
   lastName: string;
+  fullName?: string;
   phone: string;
   insuranceType?: string;
   preferredChannel: string;
@@ -244,6 +245,7 @@ export default function CustomersPage() {
                           }}
                         />
                       </TableHead>
+                      <TableHead className="text-right">نام کامل</TableHead>
                       <TableHead className="text-right">نام</TableHead>
                       <TableHead className="text-right">نام خانوادگی</TableHead>
                       <TableHead className="text-right">شماره تلفن</TableHead>
@@ -270,6 +272,10 @@ export default function CustomersPage() {
                               )
                             }
                           />
+                        </TableCell>
+                        <TableCell>
+                          {customer.fullName ||
+                            `${customer.firstName} ${customer.lastName}`}
                         </TableCell>
                         <TableCell>{customer.firstName}</TableCell>
                         <TableCell>{customer.lastName}</TableCell>

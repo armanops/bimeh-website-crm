@@ -39,8 +39,9 @@ type Customer = Omit<
 };
 
 const customerSchema = z.object({
-  firstName: z.string().min(1, "نام الزامی است"),
-  lastName: z.string().min(1, "نام خانوادگی الزامی است"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  fullName: z.string().optional(),
   phone: z.string().min(1, "شماره تلفن الزامی است"),
   insuranceType: z.string().optional(),
   preferredChannel: z.enum([
@@ -94,8 +95,9 @@ export default function CustomerEditForm({
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      firstName: customer.firstName,
-      lastName: customer.lastName,
+      firstName: customer.firstName || undefined,
+      lastName: customer.lastName || undefined,
+      fullName: customer.fullName || undefined,
       phone: customer.phone,
       insuranceType: customer.insuranceType || undefined,
       preferredChannel: (customer.preferredChannel || "whatsapp") as
@@ -200,6 +202,19 @@ export default function CustomerEditForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>نام خانوادگی *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>نام کامل</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

@@ -18,6 +18,7 @@ export default function UploadLeadsPage() {
   const [columns, setColumns] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [source, setSource] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -55,12 +56,20 @@ export default function UploadLeadsPage() {
   };
 
   const handleConfirm = async () => {
+    if (!source.trim()) {
+      toast.error("لطفاً منبع لیدها را وارد کنید");
+      return;
+    }
+
     setIsConfirming(true);
     try {
       const response = await fetch("/api/admin/outreach/import", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leads: previewData }),
+        body: JSON.stringify({
+          leads: previewData,
+          source: source.trim(),
+        }),
       });
 
       if (!response.ok) {
@@ -73,6 +82,7 @@ export default function UploadLeadsPage() {
         setPreviewData([]);
         setColumns([]);
         setFile(null);
+        setSource(""); // Clear source after successful upload
       } else {
         const errorMessages = [
           ...new Set(data.errorDetails.map((e: any) => e.error)),
@@ -101,6 +111,23 @@ export default function UploadLeadsPage() {
           فایل Excel را انتخاب کنید تا لیدها را بارگذاری و پیش‌نمایش کنید.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>تنظیمات منبع</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="منبع لیدها (مثلاً: کمپین تبلیغاتی، معرفی مشتری، ورودی دستی)"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

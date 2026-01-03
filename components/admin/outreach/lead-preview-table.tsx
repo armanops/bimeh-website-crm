@@ -49,12 +49,22 @@ const columnMappings: { [key: string]: string } = {
   surname: "lastName",
   lastName: "lastName",
   last_name: "lastName",
+  // fullName
+  "نام و نام خانوادگی": "fullName",
+  "نام کامل": "fullName",
+  "نام نام خانوادگی": "fullName",
+  fullName: "fullName",
+  full_name: "fullName",
   // phone
   تلفن: "phone",
   شماره: "phone",
   phone: "phone",
+  موبایل: "phone",
   "شماره تلفن": "phone",
   phone_number: "phone",
+  // source
+  منبع: "source",
+  source: "source",
   // productName
   "نوع بیمه": "productName",
   insuranceType: "productName",
