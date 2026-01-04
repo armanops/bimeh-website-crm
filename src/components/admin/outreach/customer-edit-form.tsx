@@ -43,6 +43,7 @@ const customerSchema = z.object({
   lastName: z.string().optional(),
   fullName: z.string().optional(),
   phone: z.string().min(1, "شماره تلفن الزامی است"),
+  source: z.string().optional(),
   insuranceType: z.string().optional(),
   preferredChannel: z.enum([
     "whatsapp",
@@ -99,6 +100,7 @@ export default function CustomerEditForm({
       lastName: customer.lastName || undefined,
       fullName: customer.fullName || undefined,
       phone: customer.phone,
+      source: customer.source || undefined,
       insuranceType: customer.insuranceType || undefined,
       preferredChannel: (customer.preferredChannel || "whatsapp") as
         | "whatsapp"
@@ -228,6 +230,19 @@ export default function CustomerEditForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>شماره تلفن *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>منبع</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

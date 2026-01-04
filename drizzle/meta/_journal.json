@@ -15,6 +15,13 @@
       "when": 1767436104386,
       "tag": "0001_thankful_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767559840497,
+      "tag": "0002_perpetual_miracleman",
+      "breakpoints": true
     }
   ]
 }

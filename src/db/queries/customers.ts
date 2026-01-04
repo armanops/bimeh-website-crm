@@ -152,6 +152,7 @@ export async function convertLeadToCustomer(
     firstName: lead[0].firstName,
     lastName: lead[0].lastName,
     phone: lead[0].phone,
+    source: lead[0].source, // Preserve source from lead
     insuranceType: additionalData.insuranceType,
     preferredChannel: additionalData.preferredChannel || "whatsapp",
     status: additionalData.status || "new",

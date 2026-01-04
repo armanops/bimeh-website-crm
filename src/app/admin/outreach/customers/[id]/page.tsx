@@ -152,6 +152,10 @@ export default function CustomerDetailPage() {
                   <p>{customer.phone}</p>
                 </div>
                 <div>
+                  <label className="text-sm font-medium">منبع</label>
+                  <p>{customer.source || "-"}</p>
+                </div>
+                <div>
                   <label className="text-sm font-medium">ایمیل</label>
                   <p>{customer.email || "-"}</p>
                 </div>

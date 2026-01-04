@@ -121,6 +121,7 @@ export const customersTable = pgTable("customers", {
   lastName: varchar("last_name", { length: 255 }), // Can be null if fullName is provided
   fullName: varchar("full_name", { length: 510 }), // Combined first and last name
   phone: varchar("phone", { length: 20 }).unique().notNull(),
+  source: varchar("source", { length: 255 }), // Source from lead or manual entry
   insuranceType: text("insurance_type"),
   preferredChannel: varchar("preferred_channel", { length: 20 })
     .$type<MessageChannel>()
