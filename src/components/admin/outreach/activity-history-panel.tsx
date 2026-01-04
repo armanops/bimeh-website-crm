@@ -8,8 +8,12 @@ import {
   Send,
   AlertCircle,
   CheckCircle,
+  Plus,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import ActivityForm from "./activity-form";
 import type { Activity, MessageChannel } from "@/db/schema";
 
 interface ActivityHistoryPanelProps {
@@ -21,6 +25,8 @@ export default function ActivityHistoryPanel({
 }: ActivityHistoryPanelProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
 
   const fetchActivities = async () => {
     setLoading(true);
@@ -48,6 +54,17 @@ export default function ActivityHistoryPanel({
   useEffect(() => {
     fetchActivities();
   }, [customerId]);
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingActivity(null);
+    fetchActivities();
+  };
+
+  const handleEditActivity = (activity: Activity) => {
+    setEditingActivity(activity);
+    setShowForm(true);
+  };
 
   const getChannelLabel = (channel: MessageChannel) => {
     const labels: { [key: string]: string } = {
@@ -98,17 +115,43 @@ export default function ActivityHistoryPanel({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>تاریخچه فعالیت‌ها</CardTitle>
-          <Button onClick={fetchActivities} variant="outline" size="sm">
-            <Clock className="h-4 w-4 ml-2" />
-            به‌روزرسانی
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={fetchActivities} variant="outline" size="sm">
+              <Clock className="h-4 w-4 ml-2" />
+              به‌روزرسانی
+            </Button>
+            <Button onClick={() => setShowForm(true)} size="sm">
+              <Plus className="h-4 w-4 ml-2" />
+              افزودن فعالیت
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
+        {showForm && (
+          <div className="mb-6">
+            <ActivityForm
+              customerId={customerId}
+              activity={editingActivity}
+              onSuccess={handleFormSuccess}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingActivity(null);
+              }}
+            />
+          </div>
+        )}
+
         {loading ? (
           <p>در حال بارگذاری فعالیت‌ها...</p>
         ) : activities.length === 0 ? (
-          <p className="text-muted-foreground">فعالیتی وجود ندارد</p>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">فعالیتی وجود ندارد</p>
+            <Button onClick={() => setShowForm(true)} variant="outline">
+              <Plus className="h-4 w-4 ml-2" />
+              اولین فعالیت را اضافه کنید
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4">
             {activities.map((activity) => (
@@ -129,10 +172,19 @@ export default function ActivityHistoryPanel({
                       <Badge variant="default">AI</Badge>
                     )}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {activity.sentAt
-                      ? formatDateTime(activity.sentAt)
-                      : formatDateTime(activity.createdAt)}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditActivity(activity)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <div className="text-sm text-muted-foreground">
+                      {activity.sentAt
+                        ? formatDateTime(activity.sentAt)
+                        : formatDateTime(activity.createdAt)}
+                    </div>
                   </div>
                 </div>
 
