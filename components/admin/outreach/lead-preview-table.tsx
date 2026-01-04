@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Minus, Trash2, Check, CheckSquare, X } from "lucide-react";
+import { Plus, Minus, Trash2, Check, CheckSquare, X, Edit } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -25,9 +25,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import LeadEditModal from "@/components/admin/outreach/lead-edit-modal";
 
 interface LeadData {
   [key: string]: string;
+}
+
+interface Lead {
+  id: number;
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
+  phone: string;
+  productId: number | null;
+  source: string | null;
+  status: string;
 }
 
 interface LeadPreviewTableProps {
@@ -87,6 +99,7 @@ export default function LeadPreviewTable({
   const [localColumns, setLocalColumns] = useState(columns);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -193,6 +206,28 @@ export default function LeadPreviewTable({
     setLocalData(newData);
     onDataChange(newData);
     setSelectedRows(new Set());
+  };
+
+  const handleEditLead = (rowIndex: number) => {
+    // For now, we'll create a mock lead object from the table data
+    // In a real implementation, you might want to pass actual lead objects
+    const row = localData[rowIndex];
+    const lead: Lead = {
+      id: rowIndex + 1, // Temporary ID for demo purposes
+      firstName: row[columnMappings["firstName"]] || null,
+      lastName: row[columnMappings["lastName"]] || null,
+      fullName: row[columnMappings["fullName"]] || null,
+      phone: row[columnMappings["phone"]] || "",
+      productId: null,
+      source: row[columnMappings["source"]] || null,
+      status: "lead",
+    };
+    setEditingLead(lead);
+  };
+
+  const handleEditSuccess = () => {
+    // Refresh data if needed
+    setEditingLead(null);
   };
 
   return (
@@ -326,14 +361,25 @@ export default function LeadPreviewTable({
                     </TableCell>
                   ))}
                   <TableCell>
-                    <Button
-                      onClick={() => removeRow(rowIndex)}
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        onClick={() => handleEditLead(rowIndex)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        title="ویرایش لید"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => removeRow(rowIndex)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -376,6 +422,17 @@ export default function LeadPreviewTable({
             پاک کردن انتخاب
           </Button>
         </div>
+
+        {/* Lead Edit Modal */}
+        {editingLead && (
+          <LeadEditModal
+            isOpen={!!editingLead}
+            onClose={() => setEditingLead(null)}
+            lead={editingLead}
+            onSuccess={handleEditSuccess}
+            products={products}
+          />
+        )}
       </div>
     </TooltipProvider>
   );

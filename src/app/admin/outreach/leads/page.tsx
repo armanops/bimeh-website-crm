@@ -40,18 +40,20 @@ import { useMessagingStore } from "@/lib/stores/messaging-store";
 import GroupSelectionDialog from "@/components/admin/outreach/group-selection-dialog";
 import LeadAddForm from "@/components/admin/outreach/lead-add-form";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import LeadEditModal from "@/components/admin/outreach/lead-edit-modal";
 
 interface Lead {
   id: number;
-  firstName: string;
-  lastName: string;
-  fullName?: string;
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
   phone: string;
   product?: {
     id: number;
     name: string;
   };
-  source?: string;
+  productId: number | null;
+  source: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -68,6 +70,7 @@ export default function LeadsPage() {
   const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -256,6 +259,15 @@ export default function LeadsPage() {
   const handleGroupDialogSuccess = () => {
     setSelectedLeads([]);
     fetchLeads(search, page); // Refresh to update any changes
+  };
+
+  const handleEditLead = (lead: Lead) => {
+    setEditingLead(lead);
+  };
+
+  const handleEditSuccess = () => {
+    setEditingLead(null);
+    fetchLeads(search, page); // Refresh to show updated data
   };
 
   return (
@@ -454,13 +466,13 @@ export default function LeadsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           {lead.fullName ||
-                            `${lead.firstName} ${lead.lastName}`}
+                            `${lead.firstName || ""} ${lead.lastName || ""}`}
                         </TableCell>
                         <TableCell className="text-right">
-                          {lead.firstName}
+                          {lead.firstName || ""}
                         </TableCell>
                         <TableCell className="text-right">
-                          {lead.lastName}
+                          {lead.lastName || ""}
                         </TableCell>
                         <TableCell className="text-right">
                           {lead.phone}
@@ -513,7 +525,11 @@ export default function LeadsPage() {
                             <Button size="sm" variant="outline">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditLead(lead)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
@@ -583,6 +599,17 @@ export default function LeadsPage() {
         userType="lead"
         onSuccess={handleGroupDialogSuccess}
       />
+
+      {/* Lead Edit Modal */}
+      {editingLead && (
+        <LeadEditModal
+          isOpen={!!editingLead}
+          onClose={() => setEditingLead(null)}
+          lead={editingLead}
+          onSuccess={handleEditSuccess}
+          products={products}
+        />
+      )}
     </div>
   );
 }
