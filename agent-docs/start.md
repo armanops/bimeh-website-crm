@@ -88,6 +88,7 @@ Before any implementation:
 6- the contents of the website should always be persian.
 7- use `sonner` for toasts. for every operation .
 8- the app is indie `/src` directory .
+9- add title ,decscriptions , and tooltip . use info icon for tooltip in some cases , others a hover tooltip .it should be minimal but informative .
 
 ## Coding Practices
 
