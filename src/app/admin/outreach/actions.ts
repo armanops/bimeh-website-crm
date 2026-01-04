@@ -21,6 +21,7 @@ export type CustomerRecipient = {
   leadId: number | null;
   firstName: string;
   lastName: string;
+  fullName?: string;
   phone: string;
   insuranceType: string | null;
   preferredChannel: MessageChannel | null;
@@ -39,6 +40,7 @@ export type LeadRecipient = {
   id: number;
   firstName: string;
   lastName: string;
+  fullName?: string;
   phone: string;
   productId: number | null;
   source: string | null;

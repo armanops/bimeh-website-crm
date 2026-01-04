@@ -65,6 +65,7 @@ interface GroupMemberWithUser {
     id: number;
     firstName: string;
     lastName: string;
+    fullName?: string;
     phone: string;
     status?: string;
     // Other fields...
@@ -535,8 +536,7 @@ export default function GroupsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-right">نوع</TableHead>
-                    <TableHead className="text-right">نام</TableHead>
-                    <TableHead className="text-right">نام خانوادگی</TableHead>
+                    <TableHead className="text-right">نام کامل</TableHead>
                     <TableHead className="text-right">شماره تلفن</TableHead>
                     <TableHead className="text-right">وضعیت</TableHead>
                     <TableHead className="text-right">
@@ -554,10 +554,11 @@ export default function GroupsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {member.user?.firstName || "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {member.user?.lastName || "-"}
+                        {member.user?.fullName ||
+                          `${member.user?.firstName || ""} ${
+                            member.user?.lastName || ""
+                          }`.trim() ||
+                          "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         {member.user?.phone || "-"}

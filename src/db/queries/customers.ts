@@ -90,6 +90,7 @@ export async function getCustomers({
       leadId: customersTable.leadId,
       firstName: customersTable.firstName,
       lastName: customersTable.lastName,
+      fullName: customersTable.fullName,
       phone: customersTable.phone,
       insuranceType: customersTable.insuranceType,
       preferredChannel: customersTable.preferredChannel,

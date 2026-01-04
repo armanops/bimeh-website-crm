@@ -355,7 +355,8 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
                     >
                       <div className="flex items-center gap-2">
                         <span>
-                          {recipient.firstName} {recipient.lastName}
+                          {recipient.fullName ||
+                            `${recipient.firstName} ${recipient.lastName}`}
                         </span>
                         <Badge
                           variant={
@@ -428,8 +429,10 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
             {selectedRecipient && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  گیرنده: {selectedRecipient.firstName}{" "}
-                  {selectedRecipient.lastName} - {selectedRecipient.phone}
+                  گیرنده:{" "}
+                  {selectedRecipient.fullName ||
+                    `${selectedRecipient.firstName} ${selectedRecipient.lastName}`}{" "}
+                  - {selectedRecipient.phone}
                   <Badge
                     variant={
                       selectedRecipient.type === "customer"
@@ -494,7 +497,8 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
                     onClick={() => handleSelectFromGroup(recipient)}
                   >
                     <TableCell>
-                      {recipient.firstName} {recipient.lastName}
+                      {recipient.fullName ||
+                        `${recipient.firstName} ${recipient.lastName}`}
                     </TableCell>
                     <TableCell>{recipient.phone}</TableCell>
                     <TableCell>
@@ -553,8 +557,9 @@ export function MessagesPanel({ templates, recipients }: MessagesPanelProps) {
         <DialogContent className="sm:max-w-md" dir="rtl">
           <DialogHeader>
             <DialogTitle>
-              تغییر گروه برای {userToChangeGroup?.firstName}{" "}
-              {userToChangeGroup?.lastName}
+              تغییر گروه برای{" "}
+              {userToChangeGroup?.fullName ||
+                `${userToChangeGroup?.firstName} ${userToChangeGroup?.lastName}`}
             </DialogTitle>
           </DialogHeader>
 

@@ -112,7 +112,7 @@ export default function CustomerDetailPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">
-            {customer.firstName} {customer.lastName}
+            {customer.fullName || `${customer.firstName} ${customer.lastName}`}
           </h1>
           <p className="text-muted-foreground">جزئیات مشتری</p>
         </div>

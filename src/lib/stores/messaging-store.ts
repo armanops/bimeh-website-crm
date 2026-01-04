@@ -1,10 +1,22 @@
 import { create } from "zustand";
 import type { Customer, Lead, Group } from "@/db/schema";
 
+interface GroupMemberWithUser {
+  userId: number;
+  userType: "lead" | "customer";
+  user?: {
+    firstName: string;
+    lastName: string;
+    fullName?: string;
+    phone: string;
+  };
+}
+
 export type MessagingRecipient = {
   id: number;
   firstName: string;
   lastName: string;
+  fullName?: string;
   phone: string;
   type: "customer" | "lead";
 };
@@ -76,10 +88,11 @@ export const useMessagingStore = create<MessagingStore>((set, get) => ({
       const members = data.members || [];
 
       // Convert group members to MessagingRecipient format
-      return members.map((member: any) => ({
+      return members.map((member: GroupMemberWithUser) => ({
         id: member.userId,
         firstName: member.user?.firstName || "",
         lastName: member.user?.lastName || "",
+        fullName: member.user?.fullName,
         phone: member.user?.phone || "",
         type: member.userType,
       }));
