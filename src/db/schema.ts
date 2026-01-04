@@ -45,7 +45,8 @@ export type CustomerStatus =
   | "contacted"
   | "target"
   | "active"
-  | "deactivated";
+  | "deactivated"
+  | "marked";
 export type UserType = "lead" | "customer";
 
 // Tables

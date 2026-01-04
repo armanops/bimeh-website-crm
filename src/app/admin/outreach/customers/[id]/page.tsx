@@ -79,6 +79,7 @@ export default function CustomerDetailPage() {
       target: "هدف",
       active: "فعال",
       deactivated: "غیرفعال",
+      marked: "نشان شده",
     };
     return labels[status] || status;
   };

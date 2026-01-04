@@ -107,7 +107,8 @@ export async function updateCustomerStatus(customerId: number, status: string) {
         | "contacted"
         | "target"
         | "active"
-        | "deactivated",
+        | "deactivated"
+        | "marked",
     });
     revalidatePath("/admin/outreach/customers");
     return { success: true };

@@ -302,6 +302,8 @@ export default function CustomersPage() {
                         ? "فعال"
                         : status === "deactivated"
                         ? "غیرفعال"
+                        : status === "marked"
+                        ? "نشان شده"
                         : status}
                     </SelectItem>
                   ))}
@@ -492,6 +494,7 @@ export default function CustomersPage() {
                               <SelectItem value="deactivated">
                                 غیرفعال
                               </SelectItem>
+                              <SelectItem value="marked">نشان شده</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>

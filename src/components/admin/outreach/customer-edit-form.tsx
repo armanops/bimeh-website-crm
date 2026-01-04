@@ -54,7 +54,14 @@ const customerSchema = z.object({
     "eita",
     "instagram",
   ]),
-  status: z.enum(["new", "contacted", "target", "active", "deactivated"]),
+  status: z.enum([
+    "new",
+    "contacted",
+    "target",
+    "active",
+    "deactivated",
+    "marked",
+  ]),
   nationalId: z.string().optional(),
   birthCertificateNumber: z.string().optional(),
   birthCertificateIssuancePlace: z.string().optional(),
@@ -414,6 +421,7 @@ export default function CustomerEditForm({
                         <SelectItem value="target">هدف</SelectItem>
                         <SelectItem value="active">فعال</SelectItem>
                         <SelectItem value="deactivated">غیرفعال</SelectItem>
+                        <SelectItem value="marked">نشان شده</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
