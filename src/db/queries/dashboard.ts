@@ -23,8 +23,8 @@ export interface DashboardMetrics {
   totalMessageTemplates: number;
   latestCustomer: {
     id: number;
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     createdAt: Date;
   } | null;
   lastActivity: {
@@ -178,6 +178,7 @@ export async function getCustomerStatusDistribution() {
     .select({
       status: customersTable.status,
       count: sql<number>`count(*)`,
+      percentage: sql<number>`(count(*) * 100.0 / (SELECT count(*) FROM customers))`,
     })
     .from(customersTable)
     .groupBy(customersTable.status);
@@ -195,6 +196,20 @@ export async function getMessageChannelDistribution() {
     .from(activitiesTable)
     .where(eq(activitiesTable.status, "sent"))
     .groupBy(activitiesTable.channel);
+
+  return result;
+}
+
+// Get lead status distribution
+export async function getLeadStatusDistribution() {
+  const result = await db
+    .select({
+      status: leadsTable.status,
+      count: sql<number>`count(*)`,
+      percentage: sql<number>`(count(*) * 100.0 / (SELECT count(*) FROM leads))`,
+    })
+    .from(leadsTable)
+    .groupBy(leadsTable.status);
 
   return result;
 }

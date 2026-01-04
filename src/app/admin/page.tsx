@@ -15,8 +15,10 @@ import {
   Package,
   Users2,
   FileText,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
+import BIDashboard from "@/components/admin/bi-dashboard";
 
 interface DashboardMetrics {
   totalCustomers: number;
@@ -31,8 +33,8 @@ interface DashboardMetrics {
   totalMessageTemplates: number;
   latestCustomer: {
     id: number;
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     createdAt: string;
   } | null;
   lastActivity: {
@@ -115,7 +117,8 @@ export default function AdminPage() {
     }).format(new Date(date));
   };
 
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number | null | undefined) => {
+    if (num == null) return "0";
     return new Intl.NumberFormat("fa-IR").format(num);
   };
 
@@ -316,8 +319,8 @@ export default function AdminPage() {
             {metrics.latestCustomer ? (
               <div className="space-y-2">
                 <div className="text-sm font-medium">
-                  {metrics.latestCustomer.firstName}{" "}
-                  {metrics.latestCustomer.lastName}
+                  {metrics.latestCustomer.firstName || ""}{" "}
+                  {metrics.latestCustomer.lastName || ""}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   ثبت شده در: {formatDate(metrics.latestCustomer.createdAt)}
@@ -395,6 +398,21 @@ export default function AdminPage() {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* BI Dashboard Section */}
+      <div className="mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              داشبورد تحلیلی (BI)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BIDashboard />
           </CardContent>
         </Card>
       </div>
