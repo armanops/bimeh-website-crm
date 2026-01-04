@@ -224,6 +224,9 @@ export default function TemplatesTable({
               <SortableHeader field="isDefault" onSort={handleSort}>
                 وضعیت
               </SortableHeader>
+              <SortableHeader field="createdAt" onSort={handleSort}>
+                تاریخ ایجاد
+              </SortableHeader>
               <TableHead className="text-right">عملیات</TableHead>
             </TableRow>
           </TableHeader>
@@ -231,7 +234,7 @@ export default function TemplatesTable({
             {filteredAndSortedTemplates.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-center text-muted-foreground"
                 >
                   هیچ قالبی یافت نشد
@@ -270,6 +273,9 @@ export default function TemplatesTable({
                         پیش‌فرض
                       </Badge>
                     )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {new Date(template.createdAt).toLocaleDateString("fa-IR")}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { leadsTable, productsTable } from "@/db/schema";
-import { eq, like, or, desc, asc, sql, inArray } from "drizzle-orm";
-import type { Lead, NewLead } from "@/db/schema";
+import { eq, like, or, and, desc, asc, sql, inArray } from "drizzle-orm";
+import type { Lead, NewLead, LeadStatus } from "@/db/schema";
 import { normalizePhoneNumber } from "../../lib/phone-utils";
 
 // Get all leads with optional pagination and search
@@ -11,23 +11,49 @@ export async function getLeads({
   search,
   sortBy = "createdAt",
   sortOrder = "desc",
+  source,
+  status,
+  productId,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  source?: string;
+  status?: string;
+  productId?: string;
 } = {}) {
   const offset = (page - 1) * limit;
 
   let whereClause = undefined;
+  const conditions = [];
+
   if (search) {
     const normalizedSearch = normalizePhoneNumber(search);
-    whereClause = or(
-      like(leadsTable.firstName, `%${search}%`),
-      like(leadsTable.lastName, `%${search}%`),
-      like(leadsTable.phone, `%${normalizedSearch}%`)
+    conditions.push(
+      or(
+        like(leadsTable.firstName, `%${search}%`),
+        like(leadsTable.lastName, `%${search}%`),
+        like(leadsTable.phone, `%${normalizedSearch}%`)
+      )
     );
+  }
+
+  if (source && source !== "all") {
+    conditions.push(eq(leadsTable.source, source));
+  }
+
+  if (status && status !== "all") {
+    conditions.push(eq(leadsTable.status, status as LeadStatus));
+  }
+
+  if (productId && productId !== "all") {
+    conditions.push(eq(leadsTable.productId, parseInt(productId)));
+  }
+
+  if (conditions.length > 0) {
+    whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
   }
 
   const orderBy = sortOrder === "desc" ? desc : asc;
@@ -168,4 +194,22 @@ export async function getLeadsByIds(ids: number[]) {
     .from(leadsTable)
     .leftJoin(productsTable, eq(leadsTable.productId, productsTable.id))
     .where(inArray(leadsTable.id, ids));
+}
+
+// Get unique sources for filtering
+export async function getUniqueLeadSources() {
+  const sources = await db
+    .selectDistinct({ source: leadsTable.source })
+    .from(leadsTable);
+
+  return sources.map((s) => s.source).filter(Boolean);
+}
+
+// Get unique statuses for filtering
+export async function getUniqueLeadStatuses() {
+  const statuses = await db
+    .selectDistinct({ status: leadsTable.status })
+    .from(leadsTable);
+
+  return statuses.map((s) => s.status);
 }

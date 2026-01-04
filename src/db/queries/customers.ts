@@ -1,7 +1,12 @@
 import { db } from "@/db";
 import { customersTable, leadsTable, productsTable } from "@/db/schema";
-import { eq, like, or, desc, asc, sql, inArray } from "drizzle-orm";
-import type { Customer, NewCustomer } from "@/db/schema";
+import { eq, like, or, and, desc, asc, sql, inArray } from "drizzle-orm";
+import type {
+  Customer,
+  NewCustomer,
+  CustomerStatus,
+  MessageChannel,
+} from "@/db/schema";
 import { normalizePhoneNumber } from "../../lib/phone-utils";
 
 // Get all customers with optional pagination and search
@@ -11,23 +16,51 @@ export async function getCustomers({
   search,
   sortBy = "createdAt",
   sortOrder = "desc",
+  status,
+  insuranceType,
+  preferredChannel,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  status?: string;
+  insuranceType?: string;
+  preferredChannel?: string;
 } = {}) {
   const offset = (page - 1) * limit;
 
   let whereClause = undefined;
+  const conditions = [];
+
   if (search) {
     const normalizedSearch = normalizePhoneNumber(search);
-    whereClause = or(
-      like(customersTable.firstName, `%${search}%`),
-      like(customersTable.lastName, `%${search}%`),
-      like(customersTable.phone, `%${normalizedSearch}%`)
+    conditions.push(
+      or(
+        like(customersTable.firstName, `%${search}%`),
+        like(customersTable.lastName, `%${search}%`),
+        like(customersTable.phone, `%${normalizedSearch}%`)
+      )
     );
+  }
+
+  if (status && status !== "all") {
+    conditions.push(eq(customersTable.status, status as CustomerStatus));
+  }
+
+  if (insuranceType && insuranceType !== "all") {
+    conditions.push(like(customersTable.insuranceType, `%${insuranceType}%`));
+  }
+
+  if (preferredChannel && preferredChannel !== "all") {
+    conditions.push(
+      eq(customersTable.preferredChannel, preferredChannel as MessageChannel)
+    );
+  }
+
+  if (conditions.length > 0) {
+    whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
   }
 
   const orderBy = sortOrder === "desc" ? desc : asc;
@@ -191,4 +224,31 @@ export async function getCustomersByIds(ids: number[]) {
     .from(customersTable)
     .leftJoin(leadsTable, eq(customersTable.leadId, leadsTable.id))
     .where(inArray(customersTable.id, ids));
+}
+
+// Get unique insurance types for filtering
+export async function getUniqueInsuranceTypes() {
+  const insuranceTypes = await db
+    .selectDistinct({ insuranceType: customersTable.insuranceType })
+    .from(customersTable);
+
+  return insuranceTypes.map((s) => s.insuranceType).filter(Boolean);
+}
+
+// Get unique preferred channels for filtering
+export async function getUniquePreferredChannels() {
+  const channels = await db
+    .selectDistinct({ preferredChannel: customersTable.preferredChannel })
+    .from(customersTable);
+
+  return channels.map((s) => s.preferredChannel).filter(Boolean);
+}
+
+// Get unique statuses for filtering
+export async function getUniqueCustomerStatuses() {
+  const statuses = await db
+    .selectDistinct({ status: customersTable.status })
+    .from(customersTable);
+
+  return statuses.map((s) => s.status);
 }

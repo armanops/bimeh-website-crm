@@ -32,6 +32,7 @@ import {
   Users,
   Plus,
 } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { useMessagingStore } from "@/lib/stores/messaging-store";
 import GroupSelectionDialog from "@/components/admin/outreach/group-selection-dialog";
@@ -63,6 +64,17 @@ export default function CustomersPage() {
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [insuranceTypeFilter, setInsuranceTypeFilter] = useState<string>("all");
+  const [preferredChannelFilter, setPreferredChannelFilter] =
+    useState<string>("all");
+  const [sortField, setSortField] = useState<string>("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [uniqueInsuranceTypes, setUniqueInsuranceTypes] = useState<string[]>(
+    []
+  );
+  const [uniqueChannels, setUniqueChannels] = useState<string[]>([]);
+  const [uniqueStatuses, setUniqueStatuses] = useState<string[]>([]);
   const limit = 10;
 
   const fetchCustomers = async (searchTerm = "", pageNum = 1) => {
@@ -71,7 +83,16 @@ export default function CustomersPage() {
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: limit.toString(),
+        sortBy: sortField,
+        sortOrder: sortDirection,
         ...(searchTerm && { search: searchTerm }),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(insuranceTypeFilter !== "all" && {
+          insuranceType: insuranceTypeFilter,
+        }),
+        ...(preferredChannelFilter !== "all" && {
+          preferredChannel: preferredChannelFilter,
+        }),
       });
       const response = await fetch(`/api/admin/outreach/customers?${params}`);
       if (!response.ok) throw new Error("Failed to fetch customers");
@@ -90,9 +111,77 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
+    fetchUniqueInsuranceTypes();
+    fetchUniqueChannels();
+    fetchUniqueStatuses();
   }, []);
 
+  const fetchUniqueStatuses = async () => {
+    try {
+      const response = await fetch(
+        "/api/admin/outreach/customers?type=statuses"
+      );
+      if (!response.ok) throw new Error("Failed to fetch unique statuses");
+      const data = await response.json();
+      setUniqueStatuses(data.statuses);
+    } catch (error) {
+      console.error("Error fetching unique statuses:", error);
+    }
+  };
+
+  const fetchUniqueInsuranceTypes = async () => {
+    try {
+      const response = await fetch(
+        "/api/admin/outreach/customers?type=insurance-types"
+      );
+      if (!response.ok)
+        throw new Error("Failed to fetch unique insurance types");
+      const data = await response.json();
+      setUniqueInsuranceTypes(data.insuranceTypes);
+    } catch (error) {
+      console.error("Error fetching unique insurance types:", error);
+    }
+  };
+
+  const fetchUniqueChannels = async () => {
+    try {
+      const response = await fetch(
+        "/api/admin/outreach/customers?type=channels"
+      );
+      if (!response.ok) throw new Error("Failed to fetch unique channels");
+      const data = await response.json();
+      setUniqueChannels(data.channels);
+    } catch (error) {
+      console.error("Error fetching unique channels:", error);
+    }
+  };
+
   const handleSearch = () => {
+    fetchCustomers(search, 1);
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    fetchCustomers(search, 1);
+  };
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    switch (filterType) {
+      case "status":
+        setStatusFilter(value);
+        break;
+      case "insuranceType":
+        setInsuranceTypeFilter(value);
+        break;
+      case "preferredChannel":
+        setPreferredChannelFilter(value);
+        break;
+    }
     fetchCustomers(search, 1);
   };
 
@@ -179,8 +268,8 @@ export default function CustomersPage() {
           <CardTitle>فیلتر و جستجو</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="lg:col-span-2">
               <Input
                 placeholder="جستجو بر اساس نام یا شماره تلفن..."
                 value={search}
@@ -188,6 +277,95 @@ export default function CustomersPage() {
                 onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                وضعیت
+              </label>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => handleFilterChange("status", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="انتخاب وضعیت" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">همه وضعیت‌ها</SelectItem>
+                  {uniqueStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status === "new"
+                        ? "جدید"
+                        : status === "contacted"
+                        ? "تماس گرفته شده"
+                        : status === "target"
+                        ? "هدف"
+                        : status === "active"
+                        ? "فعال"
+                        : status === "deactivated"
+                        ? "غیرفعال"
+                        : status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                نوع بیمه
+              </label>
+              <Select
+                value={insuranceTypeFilter}
+                onValueChange={(value) =>
+                  handleFilterChange("insuranceType", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="انتخاب نوع بیمه" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">همه انواع بیمه</SelectItem>
+                  {uniqueInsuranceTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type === "life"
+                        ? "زندگی"
+                        : type === "health"
+                        ? "سلامت"
+                        : type === "vehicle"
+                        ? "وسیله نقلیه"
+                        : type === "property"
+                        ? "اموال"
+                        : type === "other"
+                        ? "سایر"
+                        : type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                کانال ترجیحی
+              </label>
+              <Select
+                value={preferredChannelFilter}
+                onValueChange={(value) =>
+                  handleFilterChange("preferredChannel", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="انتخاب کانال" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">همه کانال‌ها</SelectItem>
+                  {uniqueChannels.map((channel) => (
+                    <SelectItem key={channel} value={channel}>
+                      {getChannelLabel(channel)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-4 mt-4">
             <Button onClick={handleSearch}>
               <Search className="h-4 w-4 mr-2" />
               جستجو
@@ -252,9 +430,23 @@ export default function CustomersPage() {
                       <TableHead className="text-right">وضعیت</TableHead>
                       <TableHead className="text-right">نوع بیمه</TableHead>
                       <TableHead className="text-right">کانال ترجیحی</TableHead>
-                      <TableHead className="text-right">تاریخ ایجاد</TableHead>
-                      <TableHead className="text-right">
-                        تاریخ بروزرسانی
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("createdAt")}
+                      >
+                        <div className="flex items-center gap-1">
+                          تاریخ ایجاد
+                          <ArrowUpDown className="h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("updatedAt")}
+                      >
+                        <div className="flex items-center gap-1">
+                          تاریخ بروزرسانی
+                          <ArrowUpDown className="h-4 w-4" />
+                        </div>
                       </TableHead>
                       <TableHead className="text-right">عملیات</TableHead>
                     </TableRow>

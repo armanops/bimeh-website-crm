@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { ArrowUpDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -84,7 +85,49 @@ export default function GroupsPage() {
     GroupMemberWithUser[]
   >([]);
   const [selectedGroupName, setSelectedGroupName] = useState("");
+  const [sortField, setSortField] = useState<
+    "name" | "memberCount" | "createdAt"
+  >("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const limit = 10;
+
+  const sortedGroups = useMemo(() => {
+    const sorted = [...groups].sort((a, b) => {
+      let aValue: string | number, bValue: string | number;
+
+      switch (sortField) {
+        case "name":
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case "memberCount":
+          aValue = a._count?.members || 0;
+          bValue = b._count?.members || 0;
+          break;
+        case "createdAt":
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [groups, sortField, sortDirection]);
+
+  const handleSort = (field: "name" | "memberCount" | "createdAt") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
 
   const fetchGroups = async (pageNum = 1) => {
     setLoading(true);
@@ -291,15 +334,45 @@ export default function GroupsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">نام گروه</TableHead>
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("name")}
+                      >
+                        <div className="flex items-center gap-1">
+                          نام گروه
+                          {sortField === "name" && (
+                            <ArrowUpDown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </TableHead>
                       <TableHead className="text-right">توضیحات</TableHead>
-                      <TableHead className="text-right">تعداد اعضا</TableHead>
-                      <TableHead className="text-right">تاریخ ایجاد</TableHead>
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("memberCount")}
+                      >
+                        <div className="flex items-center gap-1">
+                          تعداد اعضا
+                          {sortField === "memberCount" && (
+                            <ArrowUpDown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("createdAt")}
+                      >
+                        <div className="flex items-center gap-1">
+                          تاریخ ایجاد
+                          {sortField === "createdAt" && (
+                            <ArrowUpDown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </TableHead>
                       <TableHead className="text-right">عملیات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {groups.map((group) => (
+                    {sortedGroups.map((group) => (
                       <TableRow key={group.id}>
                         <TableCell className="text-right font-medium">
                           {group.name}

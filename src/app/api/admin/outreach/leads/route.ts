@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLeads, createLead } from "@/db/queries/leads";
+import {
+  getLeads,
+  createLead,
+  getUniqueLeadSources,
+  getUniqueLeadStatuses,
+} from "@/db/queries/leads";
 import { db } from "@/db";
 import { leadsTable, customersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,21 +14,38 @@ import { validatePhoneNumber } from "@/lib/phone-validation";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const type = searchParams.get("type");
 
-    const result = await getLeads({
-      page,
-      limit,
-      search,
-      sortBy,
-      sortOrder: sortOrder as "asc" | "desc",
-    });
+    if (type === "sources") {
+      const sources = await getUniqueLeadSources();
+      return NextResponse.json({ sources });
+    } else if (type === "statuses") {
+      const statuses = await getUniqueLeadStatuses();
+      return NextResponse.json({ statuses });
+    } else {
+      // Default to regular leads list
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const search = searchParams.get("search") || "";
+      const sortBy = searchParams.get("sortBy") || "createdAt";
+      const sortOrder = searchParams.get("sortOrder") || "desc";
+      const source = searchParams.get("source") || "";
+      const status = searchParams.get("status") || "";
+      const productId = searchParams.get("productId") || "";
 
-    return NextResponse.json(result);
+      const result = await getLeads({
+        page,
+        limit,
+        search,
+        sortBy,
+        sortOrder: sortOrder as "asc" | "desc",
+        source,
+        status,
+        productId,
+      });
+
+      return NextResponse.json(result);
+    }
   } catch (error) {
     console.error("Error fetching leads:", error);
     return NextResponse.json(

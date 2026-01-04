@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomers, createCustomer } from "@/db/queries/customers";
+import {
+  getCustomers,
+  createCustomer,
+  getUniqueInsuranceTypes,
+  getUniquePreferredChannels,
+  getUniqueCustomerStatuses,
+} from "@/db/queries/customers";
 import { db } from "@/db";
 import { leadsTable, customersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,21 +15,41 @@ import { validatePhoneNumber } from "@/lib/phone-validation";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const type = searchParams.get("type");
 
-    const result = await getCustomers({
-      page,
-      limit,
-      search,
-      sortBy,
-      sortOrder: sortOrder as "asc" | "desc",
-    });
+    if (type === "insurance-types") {
+      const insuranceTypes = await getUniqueInsuranceTypes();
+      return NextResponse.json({ insuranceTypes });
+    } else if (type === "channels") {
+      const channels = await getUniquePreferredChannels();
+      return NextResponse.json({ channels });
+    } else if (type === "statuses") {
+      const statuses = await getUniqueCustomerStatuses();
+      return NextResponse.json({ statuses });
+    } else {
+      // Default to regular customers list
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "10");
+      const search = searchParams.get("search") || "";
+      const sortBy = searchParams.get("sortBy") || "createdAt";
+      const sortOrder = searchParams.get("sortOrder") || "desc";
+      const status = searchParams.get("status") || "";
+      const insuranceType = searchParams.get("insuranceType") || "";
+      const preferredChannel = searchParams.get("preferredChannel") || "";
 
-    return NextResponse.json(result);
+      const result = await getCustomers({
+        page,
+        limit,
+        search,
+        sortBy,
+        sortOrder: sortOrder as "asc" | "desc",
+        status,
+        insuranceType,
+        preferredChannel,
+      });
+
+      return NextResponse.json(result);
+    }
   } catch (error) {
     console.error("Error fetching customers:", error);
     return NextResponse.json(

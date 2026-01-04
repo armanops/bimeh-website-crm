@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ArrowUpDown } from "lucide-react";
 import {
   Search,
   Eye,
@@ -68,6 +69,13 @@ export default function LeadsPage() {
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [productFilter, setProductFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<string>("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [uniqueSources, setUniqueSources] = useState<string[]>([]);
+  const [uniqueStatuses, setUniqueStatuses] = useState<string[]>([]);
   const limit = 10;
 
   const fetchLeads = async (searchTerm = "", pageNum = 1) => {
@@ -76,7 +84,12 @@ export default function LeadsPage() {
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: limit.toString(),
+        sortBy: sortField,
+        sortOrder: sortDirection,
         ...(searchTerm && { search: searchTerm }),
+        ...(sourceFilter !== "all" && { source: sourceFilter }),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(productFilter !== "all" && { productId: productFilter }),
       });
       const response = await fetch(`/api/admin/outreach/leads?${params}`);
       if (!response.ok) throw new Error("Failed to fetch leads");
@@ -96,7 +109,31 @@ export default function LeadsPage() {
   useEffect(() => {
     fetchLeads();
     fetchProducts();
+    fetchUniqueSources();
+    fetchUniqueStatuses();
   }, []);
+
+  const fetchUniqueSources = async () => {
+    try {
+      const response = await fetch("/api/admin/outreach/leads?type=sources");
+      if (!response.ok) throw new Error("Failed to fetch unique sources");
+      const data = await response.json();
+      setUniqueSources(data.sources);
+    } catch (error) {
+      console.error("Error fetching unique sources:", error);
+    }
+  };
+
+  const fetchUniqueStatuses = async () => {
+    try {
+      const response = await fetch("/api/admin/outreach/leads?type=statuses");
+      if (!response.ok) throw new Error("Failed to fetch unique statuses");
+      const data = await response.json();
+      setUniqueStatuses(data.statuses);
+    } catch (error) {
+      console.error("Error fetching unique statuses:", error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -113,8 +150,33 @@ export default function LeadsPage() {
     fetchLeads(search, 1);
   };
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    fetchLeads(search, 1);
+  };
+
   const handlePageChange = (newPage: number) => {
     fetchLeads(search, newPage);
+  };
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    switch (filterType) {
+      case "source":
+        setSourceFilter(value);
+        break;
+      case "status":
+        setStatusFilter(value);
+        break;
+      case "product":
+        setProductFilter(value);
+        break;
+    }
+    fetchLeads(search, 1);
   };
 
   const handleDelete = async (id: number) => {
@@ -210,8 +272,8 @@ export default function LeadsPage() {
           <CardTitle>فیلتر و جستجو</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="lg:col-span-2">
               <Input
                 placeholder="جستجو بر اساس نام یا شماره تلفن..."
                 value={search}
@@ -219,6 +281,72 @@ export default function LeadsPage() {
                 onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                منبع
+              </label>
+              <Select
+                value={sourceFilter}
+                onValueChange={(value) => handleFilterChange("source", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="انتخاب منبع" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">همه منابع</SelectItem>
+                  {uniqueSources.map((source) => (
+                    <SelectItem key={source} value={source}>
+                      {source}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                وضعیت
+              </label>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => handleFilterChange("status", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="انتخاب وضعیت" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">همه وضعیت‌ها</SelectItem>
+                  {uniqueStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status === "lead"
+                        ? "لید"
+                        : status === "contacted"
+                        ? "تماس گرفته شده"
+                        : status === "deactivated"
+                        ? "غیرفعال"
+                        : status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Select
+              value={productFilter}
+              onValueChange={(value) => handleFilterChange("product", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="محصول" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">همه محصولات</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id.toString()}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-4 mt-4">
             <Button onClick={handleSearch}>
               <Search className="h-4 w-4 mr-2" />
               جستجو
@@ -292,9 +420,23 @@ export default function LeadsPage() {
                       <TableHead className="text-right">وضعیت</TableHead>
                       <TableHead className="text-right">محصول</TableHead>
                       <TableHead className="text-right">منبع</TableHead>
-                      <TableHead className="text-right">تاریخ ایجاد</TableHead>
-                      <TableHead className="text-right">
-                        تاریخ بروزرسانی
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("createdAt")}
+                      >
+                        <div className="flex items-center gap-1">
+                          تاریخ ایجاد
+                          <ArrowUpDown className="h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-right cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort("updatedAt")}
+                      >
+                        <div className="flex items-center gap-1">
+                          تاریخ بروزرسانی
+                          <ArrowUpDown className="h-4 w-4" />
+                        </div>
                       </TableHead>
                       <TableHead className="text-right">عملیات</TableHead>
                     </TableRow>
